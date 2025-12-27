@@ -60,106 +60,99 @@ export async function login(email: string, password: string): Promise<User> {
     throw new Error('Sign in failed. Please try again.');
   }
 
-  // Get user data from database - user must exist
-  let userData = null;
-  let userError = null;
+  // Get user data from database - with timeout to prevent infinite hanging
+  console.log('Fetching user data from database...');
   
-  // Try to get user from database
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', authData.user.id)
-    .single();
-  
-  userData = data;
-  userError = error;
-
-  // If user doesn't exist, wait for database trigger (for new signups)
-  if (userError || !userData) {
-    console.log('User not found in database, waiting for trigger...');
-    
-    // Retry a few times (database trigger might be slow)
-    let retries = 5;
-    while (retries > 0 && (!userData || userError)) {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-      
-      const { data: retryData, error: retryError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
-      
-      if (retryData && !retryError) {
-        userData = retryData;
-        userError = null;
-        console.log('User record found after retry');
-        break;
-      }
-      
-      retries--;
-      console.log(`User still not found, retrying... (${retries} attempts left)`);
-    }
-    
-    // If still not found, try to create it manually (fallback)
-    if (!userData || userError) {
-      console.warn('User record not created by trigger, attempting manual creation...');
-      console.warn('   User ID:', authData.user.id);
-      console.warn('   Email:', authData.user.email);
-      
-      // Generate API key
-      const apiKey = `memryx_sk_${authData.user.id.substring(0, 24)}${Math.random().toString(36).substring(2, 12)}`;
-      
-      const { data: newUserData, error: createError } = await supabase
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          email: authData.user.email,
-          plan: 'free',
-          api_key: apiKey,
-          is_admin: false,
-        })
-        .select()
-        .single();
-      
-      if (createError) {
-        console.error('Failed to create user record manually:', createError);
-        console.error('   Error code:', createError.code);
-        console.error('   Error message:', createError.message);
-        console.error('   Error details:', createError.details);
-        console.error('   Error hint:', createError.hint);
+  const loginWithTimeout = async (timeoutMs: number = 8000) => {
+    return Promise.race([
+      (async () => {
+        // Try to get user from database
+        let userData = null;
+        let userError = null;
         
-        // Check if it's a duplicate key error (user was created between retries)
-        if (createError.code === '23505' || createError.message?.includes('duplicate') || createError.message?.includes('unique')) {
-          console.log('User record exists now (created by trigger), fetching...');
-          // Try to fetch it one more time
-          const { data: finalData, error: finalError } = await supabase
+        // First attempt
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', authData.user.id)
+          .single();
+        
+        userData = data;
+        userError = error;
+        
+        // If not found, wait 2 seconds and try once more (for database trigger)
+        if (userError || !userData) {
+          console.log('User not found, waiting 2 seconds for database trigger...');
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          const { data: retryData, error: retryError } = await supabase
             .from('users')
             .select('*')
             .eq('id', authData.user.id)
             .single();
           
-          if (finalData && !finalError) {
-            userData = finalData;
-            console.log('User record found after duplicate error');
-          } else {
-            throw new Error('User account exists but cannot be accessed. Please contact support.');
+          if (retryData && !retryError) {
+            userData = retryData;
+            userError = null;
+            console.log('✅ User record found after retry');
           }
-        } else if (createError.message?.includes('permission') || createError.message?.includes('policy') || createError.code === '42501') {
-          // RLS policy issue - need to add INSERT policy
-          console.error('RLS policy issue - user cannot insert their own record');
-          throw new Error('Account setup requires database configuration. Please contact support or try again in a few moments.');
-        } else {
-          throw new Error(`Account setup failed: ${createError.message || 'Unknown error'}. Please try again or contact support.`);
         }
-      } else if (!newUserData) {
-        console.error('User record creation returned no data');
-        throw new Error('Account setup incomplete. Please try signing in again in a few seconds.');
-      } else {
-        userData = newUserData;
-        console.log('✅ User record created manually successfully');
-      }
-    }
-  }
+        
+        // If still not found, try to create it manually
+        if (!userData || userError) {
+          console.log('User record not found, creating manually...');
+          
+          const apiKey = `memryx_sk_${authData.user.id.substring(0, 24)}${Math.random().toString(36).substring(2, 12)}`;
+          
+          const { data: newUserData, error: createError } = await supabase
+            .from('users')
+            .insert({
+              id: authData.user.id,
+              email: authData.user.email,
+              plan: 'free',
+              api_key: apiKey,
+              is_admin: false,
+            })
+            .select()
+            .single();
+          
+          if (createError) {
+            // If duplicate, try fetching one more time
+            if (createError.code === '23505' || createError.message?.includes('duplicate')) {
+              console.log('Duplicate key - user exists, fetching...');
+              const { data: finalData } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', authData.user.id)
+                .single();
+              
+              if (finalData) {
+                userData = finalData;
+              } else {
+                throw new Error('User account setup incomplete. Please try again.');
+              }
+            } else {
+              throw new Error(`Account setup failed: ${createError.message || 'Unknown error'}`);
+            }
+          } else if (newUserData) {
+            userData = newUserData;
+            console.log('✅ User record created manually');
+          }
+        }
+        
+        if (!userData) {
+          throw new Error('User account not found. Please sign up first.');
+        }
+        
+        return userData;
+      })(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Login timeout - please try again')), timeoutMs)
+      )
+    ]);
+  };
+  
+  const userData = await loginWithTimeout(8000) as any;
 
   return {
     id: userData.id,
