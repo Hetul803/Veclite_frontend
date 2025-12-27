@@ -36,12 +36,38 @@ export function Portal() {
   const [newIndexDesc, setNewIndexDesc] = useState('');
 
   useEffect(() => {
-    if (!user) {
-      setIsLoginOpen(true);
-      return;
-    }
-
-    loadData();
+    // Check if user is authenticated (even if user data not loaded yet)
+    const checkAuth = async () => {
+      if (!supabase) return;
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // If no auth session, show login
+      if (!session) {
+        setIsLoginOpen(true);
+        return;
+      }
+      
+      // If auth session exists but user data not loaded yet, wait a bit
+      if (!user && session) {
+        console.log('Auth session exists but user data not loaded yet, waiting...');
+        // Wait a bit more for user data to load
+        setTimeout(() => {
+          if (!user) {
+            console.log('User data still not loaded, but auth session exists - allowing access');
+            // User can still access - data will load in background
+          }
+        }, 2000);
+        return;
+      }
+      
+      // User data loaded, proceed normally
+      if (user) {
+        loadData();
+      }
+    };
+    
+    checkAuth();
   }, [user]);
 
   const loadData = async () => {

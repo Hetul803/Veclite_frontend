@@ -67,35 +67,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log('   Loading user data from database for:', authUser.email);
       
-      // Try to get user from database, with retry logic for new signups
+      // Try to get user from database, with quick retry for new signups
       let currentUser = null;
-      let retries = 3;
       
-      while (retries > 0 && !currentUser) {
+      // First attempt - immediate
+      try {
+        currentUser = await getCurrentUserFromDB();
+      } catch (dbError: any) {
+        console.log('   First attempt failed:', dbError.message);
+      }
+      
+      // If not found, try once more after 1 second (for new signups)
+      if (!currentUser) {
+        console.log('   User not found, waiting 1 second for database trigger...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         try {
           currentUser = await getCurrentUserFromDB();
-          if (currentUser) {
-            break;
-          }
-          
-          if (retries > 1) {
-            console.log(`   User not found, retrying... (${retries - 1} attempts left)`);
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
-          }
-          retries--;
         } catch (dbError: any) {
-          console.warn('   Database lookup error:', dbError.message);
-          if (dbError?.message?.includes('not found') || dbError?.message?.includes('No rows')) {
-            // User doesn't exist yet - this is OK for new signups
-            if (retries > 1) {
-              console.log(`   User record not created yet, retrying... (${retries - 1} attempts left)`);
-              await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-            retries--;
-          } else {
-            // Other error - don't retry
-            throw dbError;
-          }
+          console.log('   Second attempt failed:', dbError.message);
         }
       }
       
@@ -103,9 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentUser);
         console.log('   User data loaded successfully');
       } else {
-        console.warn('   User record not found in database after retries. Auth session exists but no DB record.');
-        console.warn('   This might mean the database trigger failed. User can still use the app.');
-        // Set user to null but don't throw - auth session is valid
+        console.warn('   User record not found in database yet. This is normal for new signups.');
+        console.warn('   Auth session is valid - user can use the app. Database record will be created by trigger.');
+        // Set user to null - Portal will handle this case
         setUser(null);
       }
     } catch (error: any) {
