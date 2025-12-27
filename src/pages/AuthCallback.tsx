@@ -119,10 +119,17 @@ export function AuthCallback() {
             // Get the session again to make sure we have it
             const { data: { session: currentSession } } = await supabase.auth.getSession();
             
-            if (currentSession && currentSession.user) {
-              console.log('✅ Session confirmed:', currentSession.user.email);
-              console.log('   User ID:', currentSession.user.id);
-              console.log('   Email confirmed:', currentSession.user.email_confirmed_at);
+            // Check if we have a valid session (either from exchange or current)
+            const validSession = currentSession || session;
+            
+            if (validSession && validSession.user) {
+              console.log('✅ Session confirmed:', validSession.user.email);
+              console.log('   User ID:', validSession.user.id);
+              console.log('   Email confirmed:', validSession.user.email_confirmed_at);
+              
+              // Wait a moment for database trigger to create user record (if needed)
+              console.log('   Waiting for user record to be created in database...');
+              await new Promise(resolve => setTimeout(resolve, 2000));
               
               setStatus('success');
               setMessage('✅ Email confirmed! Redirecting...');
@@ -130,17 +137,6 @@ export function AuthCallback() {
               // Clear the code from URL
               window.history.replaceState({}, document.title, window.location.pathname);
               
-              setTimeout(() => {
-                console.log('🚀 Redirecting to /app');
-                navigate('/app', { replace: true });
-              }, 1500);
-              return;
-            } else if (session && session.user) {
-              // Fallback to original session if currentSession check fails
-              console.log('✅ Using original session:', session.user.email);
-              setStatus('success');
-              setMessage('✅ Email confirmed! Redirecting...');
-              window.history.replaceState({}, document.title, window.location.pathname);
               setTimeout(() => {
                 console.log('🚀 Redirecting to /app');
                 navigate('/app', { replace: true });

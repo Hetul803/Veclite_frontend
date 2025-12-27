@@ -46,13 +46,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         return;
       }
+      
+      // Check if user is authenticated first
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        console.log('   No authenticated user, skipping database lookup');
+        setUser(null);
+        return;
+      }
+      
+      console.log('   Loading user data from database for:', authUser.email);
       const currentUser = await getCurrentUserFromDB();
+      
+      if (!currentUser) {
+        console.warn('   User not found in database yet. This might be a new signup - database trigger may still be running.');
+        // Don't set user to null if auth session exists - let the app handle it
+        // The user record will be created by the database trigger
+        setUser(null);
+        return;
+      }
+      
       setUser(currentUser);
+      console.log('   User data loaded successfully');
     } catch (error: any) {
       console.error('Error loading user:', error);
       // Don't show error to user on initial load (they might not be logged in)
       if (error?.message?.includes('Supabase not configured')) {
         console.error('❌ Supabase configuration error. Check Vercel environment variables.');
+      } else if (error?.message?.includes('not found') || error?.message?.includes('No rows')) {
+        console.warn('   User record not found in database yet - this is normal for new signups');
+        // Don't throw - just set user to null, auth session is still valid
       }
       setUser(null);
     } finally {
