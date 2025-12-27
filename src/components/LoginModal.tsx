@@ -133,18 +133,28 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           }
 
           // User created successfully - will be created in database via trigger
-          setError('✅ Sign up successful! Redirecting...');
-          setTimeout(() => {
+          console.log('✅ User created, attempting auto-login...');
+          setError('✅ Sign up successful! Logging you in...');
+          
+          // Wait a moment for database trigger to create user record
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          // Try to sign in automatically
+          try {
+            await login(email, password);
             setIsSignUp(false);
-            // Try to sign in automatically if email confirmation is disabled
-            login(email, password).then(() => {
-              onClose();
-              navigate('/app');
-            }).catch(() => {
-              // If auto-login fails, user needs to sign in manually
-              setError('✅ Account created! Please sign in.');
-            });
-          }, 1000);
+            onClose();
+            navigate('/app');
+          } catch (loginErr: any) {
+            console.error('Auto-login failed:', loginErr);
+            // If auto-login fails, user needs to sign in manually
+            setIsSignUp(false);
+            setError('✅ Account created! Please sign in with your email and password.');
+            setTimeout(() => {
+              setEmail('');
+              setPassword('');
+            }, 3000);
+          }
       } else {
         // Sign in - only works if user exists
         if (!supabase) {

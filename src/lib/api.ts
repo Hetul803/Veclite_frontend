@@ -51,7 +51,7 @@ export async function login(email: string, password: string): Promise<User> {
       throw new Error('Invalid email or password. Please try again.');
     }
     if (authError.message?.includes('Email not confirmed')) {
-      throw new Error('Please verify your email address before signing in. Check your inbox for the confirmation link.');
+      throw new Error('Please verify your email address before signing in. Check your inbox for the confirmation link. If email verification is disabled, try signing up again.');
     }
     throw new Error(authError.message || 'Invalid credentials');
   }
