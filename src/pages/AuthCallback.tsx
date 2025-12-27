@@ -65,7 +65,12 @@ export function AuthCallback() {
 
         // Check if there's a hash with tokens
         const hash = window.location.hash;
-        const hasHashTokens = hash && (hash.includes('access_token') || hash.includes('type=recovery'));
+        console.log('🔍 Checking hash:', hash);
+        console.log('   Hash length:', hash?.length);
+        console.log('   Contains access_token:', hash?.includes('access_token'));
+        console.log('   Contains type:', hash?.includes('type'));
+        
+        const hasHashTokens = hash && (hash.includes('access_token') || hash.includes('type=recovery') || hash.includes('type=email'));
 
         if (hasHashTokens) {
           console.log('📦 Found hash tokens, parsing...');
@@ -80,7 +85,10 @@ export function AuthCallback() {
 
           console.log('   Token type:', type);
           console.log('   Has access_token:', !!accessToken);
+          console.log('   Access token length:', accessToken?.length);
           console.log('   Has refresh_token:', !!refreshToken);
+          console.log('   Refresh token length:', refreshToken?.length);
+          console.log('   All hash params:', Array.from(hashParams.keys()));
 
           if (error) {
             console.error('❌ Error in hash:', error, errorDescription);
@@ -89,6 +97,8 @@ export function AuthCallback() {
 
           if (accessToken && refreshToken) {
             console.log('🔑 Setting session from hash tokens...');
+            console.log('   Access token (first 20 chars):', accessToken.substring(0, 20) + '...');
+            console.log('   Refresh token (first 20 chars):', refreshToken.substring(0, 20) + '...');
             
             // Set the session explicitly
             const { data: { session }, error: sessionError } = await supabase.auth.setSession({
@@ -96,14 +106,24 @@ export function AuthCallback() {
               refresh_token: refreshToken,
             });
 
+            console.log('   Session response:', {
+              hasSession: !!session,
+              hasUser: !!session?.user,
+              userEmail: session?.user?.email,
+              error: sessionError?.message
+            });
+
             if (sessionError) {
               console.error('❌ Session error:', sessionError);
+              console.error('   Error code:', sessionError.status);
+              console.error('   Error message:', sessionError.message);
               throw sessionError;
             }
 
             if (session && session.user) {
               console.log('✅ Session created successfully:', session.user.email);
               console.log('   User ID:', session.user.id);
+              console.log('   Email confirmed:', session.user.email_confirmed_at);
               
               setStatus('success');
               setMessage('✅ Email confirmed! Redirecting...');
@@ -118,16 +138,28 @@ export function AuthCallback() {
               }, 1000);
               return;
             } else {
+              console.error('❌ Session created but no user found');
+              console.error('   Session object:', session);
               throw new Error('Session created but no user found');
             }
           } else {
             console.warn('⚠️ Hash found but missing tokens');
+            console.warn('   Access token present:', !!accessToken);
+            console.warn('   Refresh token present:', !!refreshToken);
+            console.warn('   Full hash:', hash);
           }
         }
 
         // Fallback: Try to get existing session (Supabase client might have already processed it)
         console.log('🔍 Checking for existing session...');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        console.log('   Session check result:', {
+          hasSession: !!session,
+          hasUser: !!session?.user,
+          userEmail: session?.user?.email,
+          error: sessionError?.message
+        });
         
         if (sessionError) {
           console.error('❌ Get session error:', sessionError);
@@ -137,6 +169,7 @@ export function AuthCallback() {
         if (session && session.user) {
           console.log('✅ Found existing session:', session.user.email);
           console.log('   User ID:', session.user.id);
+          console.log('   Email confirmed:', session.user.email_confirmed_at);
           
           setStatus('success');
           setMessage('✅ Email confirmed! Redirecting...');
@@ -151,17 +184,29 @@ export function AuthCallback() {
         } else {
           // No session found - might already be confirmed or link expired
           console.warn('⚠️ No session found after callback');
+          console.log('   Full URL:', window.location.href);
           console.log('   Hash:', hash);
+          console.log('   Search params:', window.location.search);
           console.log('   This might mean:');
           console.log('   1. Link already used');
           console.log('   2. Link expired');
           console.log('   3. Email already confirmed');
+          console.log('   4. Tokens not in URL (check Supabase redirect URL settings)');
           
-          setStatus('error');
-          setMessage('⚠️ Unable to verify. The link may have expired or already been used. Please try signing in.');
+          // Check if user might already be confirmed
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            console.log('   Found user but no session:', user.email);
+            setStatus('error');
+            setMessage('⚠️ Email may already be confirmed. Please try signing in.');
+          } else {
+            setStatus('error');
+            setMessage('⚠️ Unable to verify. The link may have expired or already been used. Please try signing up again.');
+          }
+          
           setTimeout(() => {
             navigate('/', { replace: true });
-          }, 3000);
+          }, 5000);
         }
       } catch (err: any) {
         console.error('❌ Auth callback error:', err);
