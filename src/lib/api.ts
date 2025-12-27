@@ -90,6 +90,27 @@ export async function logout(): Promise<void> {
   }
 }
 
+export async function resendConfirmationEmail(email: string): Promise<void> {
+  if (!supabase) {
+    throw new Error('Supabase not configured. Please check your environment variables.');
+  }
+
+  const frontendUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+  const redirectUrl = `${frontendUrl}/auth/callback`;
+
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: {
+      emailRedirectTo: redirectUrl,
+    }
+  });
+
+  if (error) {
+    throw new Error(error.message || 'Failed to resend confirmation email');
+  }
+}
+
 export async function getCurrentUserFromDB(): Promise<User | null> {
   if (!supabase) {
     const error = 'Supabase not configured. Please check your environment variables.';

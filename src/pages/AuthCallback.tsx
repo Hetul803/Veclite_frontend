@@ -38,10 +38,10 @@ export function AuthCallback() {
           
           if (errorCode === 'otp_expired') {
             setStatus('error');
-            setMessage('⚠️ Email confirmation link has expired. Please request a new confirmation email or sign up again.');
+            setMessage('⚠️ Email confirmation link has expired. Supabase links expire after 1 hour. Please sign up again to get a fresh link.');
             setTimeout(() => {
               navigate('/', { replace: true });
-            }, 5000);
+            }, 7000);
             return;
           } else if (errorCode === 'access_denied') {
             setStatus('error');

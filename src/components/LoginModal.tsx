@@ -123,12 +123,12 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           // Check if user was created (might be null if email confirmation is required)
           if (!authData.user) {
             // This can happen if email confirmation is required
-            setError('✅ Sign up successful! Please check your email to verify your account before signing in.');
+            setError('✅ Sign up successful! Please check your email to verify your account. Click the confirmation link within 1 hour.');
             setTimeout(() => {
               setIsSignUp(false);
               setEmail('');
               setPassword('');
-            }, 3000);
+            }, 5000);
             return;
           }
 
