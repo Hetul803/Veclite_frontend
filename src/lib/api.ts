@@ -92,20 +92,36 @@ export async function logout(): Promise<void> {
 
 export async function getCurrentUserFromDB(): Promise<User | null> {
   if (!supabase) {
-    throw new Error('Supabase not configured. Please check your environment variables.');
+    const error = 'Supabase not configured. Please check your environment variables.';
+    console.error('❌', error);
+    console.error('   VITE_SUPABASE_URL:', import.meta.env.VITE_SUPABASE_URL || 'MISSING');
+    console.error('   VITE_SUPABASE_ANON_KEY:', import.meta.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'MISSING');
+    throw new Error(error);
   }
   
-  const supabaseUser = await getCurrentUser();
-  if (!supabaseUser) return null;
-  
-  return {
-    id: supabaseUser.id,
-    email: supabaseUser.email,
-    plan: supabaseUser.plan,
-    isAdmin: supabaseUser.is_admin,
-    apiKey: supabaseUser.api_key,
-    created_at: supabaseUser.created_at,
-  };
+  try {
+    const supabaseUser = await getCurrentUser();
+    if (!supabaseUser) return null;
+    
+    return {
+      id: supabaseUser.id,
+      email: supabaseUser.email,
+      plan: supabaseUser.plan,
+      isAdmin: supabaseUser.is_admin,
+      apiKey: supabaseUser.api_key,
+      created_at: supabaseUser.created_at,
+    };
+  } catch (error: any) {
+    console.error('Error getting current user from DB:', error);
+    // If it's a network error, provide helpful message
+    if (error?.message?.includes('fetch') || error?.message?.includes('network')) {
+      console.error('❌ Network error connecting to Supabase. Check:');
+      console.error('   1. Supabase project is active (not paused)');
+      console.error('   2. Environment variables are set in Vercel');
+      console.error('   3. Vercel project was redeployed after adding variables');
+    }
+    throw error;
+  }
 }
 
 export async function getUsage(userId: string): Promise<UsageData[]> {
@@ -250,11 +266,11 @@ export async function createIndex(
     .from('indexes')
     .insert({
       user_id: userId,
-      name,
-      embedding_dim,
-      description,
-      status: 'draft',
-      vector_count: 0,
+    name,
+    embedding_dim,
+    description,
+    status: 'draft',
+    vector_count: 0,
     })
     .select()
     .single();

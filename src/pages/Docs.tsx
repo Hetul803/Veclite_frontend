@@ -43,9 +43,12 @@ export function Docs() {
               <CardContent>
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-slate-100 font-semibold mb-3">1. Get Your API Key</h3>
+                    <h3 className="text-slate-100 font-semibold mb-3">1. Get Your API Key & Backend URL</h3>
                     <p className="text-slate-400 mb-3">
                       Sign up at <a href="/app" className="text-cyan-400 hover:underline">memryx.com/app</a> and go to Portal → API Keys. Copy your API key (starts with <code className="text-cyan-400">memryx_sk_</code>).
+                    </p>
+                    <p className="text-slate-400 mb-3 text-sm">
+                      <strong>Backend URL:</strong> Use your deployed Memryx backend URL (e.g., <code className="text-cyan-400">https://api.memryx.org</code> or your Railway URL). This is where your backend API is hosted, not the frontend website.
                     </p>
                   </div>
 
@@ -192,6 +195,230 @@ context = "\\n".join([r["metadata"]["text"] for r in results["results"]])
                   </div>
                   <p className="text-slate-400 text-sm">
                     <strong>Google Colab:</strong> Install <code className="text-cyan-400">!pip install sentence-transformers requests</code>, then use the code above.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.section>
+
+          {/* Chatbot Example - JavaScript/TypeScript */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Card glow>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-cyan-500/10 rounded-lg flex items-center justify-center">
+                    <Code size={20} className="text-cyan-400" />
+                  </div>
+                  <CardTitle>Chatbot Example (JavaScript/TypeScript)</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-slate-400">
+                    Same chatbot example using Node.js/TypeScript. Works with Express, Next.js, or any Node.js environment.
+                  </p>
+                  <div className="bg-slate-950 rounded-lg p-4 border border-slate-800 overflow-x-auto">
+                    <pre className="text-sm text-slate-300">
+                      <code>{`import { pipeline } from '@xenova/transformers';
+
+// Setup
+const API_KEY = "memryx_sk_YOUR_KEY_HERE"; // Get this from your Memryx Portal
+const API_URL = "${API_BASE_URL}"; // Your deployed Memryx backend URL (Railway)
+
+// Initialize embedding model
+const model = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+
+// 1. Add knowledge base
+const documents = [
+    "Memryx is a compressed memory engine for AI.",
+    "It delivers exact recall at a fraction of vector DB cost.",
+    "Memryx uses a unique cluster-based compression approach.",
+    "It achieves 12.71x compression without accuracy loss.",
+    "Traditional vector databases store every embedding individually."
+];
+
+console.log("Adding vectors...");
+const vectorsToAdd = [];
+
+for (let i = 0; i < documents.length; i++) {
+    const embedding = await model(documents[i], { pooling: 'mean', normalize: true });
+    const values = Array.from(embedding.data);
+    
+    vectorsToAdd.push({
+        id: \`doc_\${i}\`,
+        values: values,
+        metadata: { text: documents[i] }
+    });
+}
+
+await fetch(\`\${API_URL}/add\`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        api_key: API_KEY,
+        vectors: vectorsToAdd
+    })
+});
+
+console.log(\`Added \${vectorsToAdd.length} vectors.\`);
+
+// 2. Finalize index
+console.log("Finalizing index (this may take a moment)...");
+const finalizeResponse = await fetch(\`\${API_URL}/finalize\`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ api_key: API_KEY })
+});
+const { build_id } = await finalizeResponse.json();
+
+// Wait for build to complete
+while (true) {
+    const statusResponse = await fetch(
+        \`\${API_URL}/finalize/status?build_id=\${build_id}\`
+    );
+    const status = await statusResponse.json();
+    
+    console.log(\`Build status: \${status.status} (progress: \${status.progress || 0}%)\`);
+    
+    if (status.status === "ready") {
+        console.log("Index build complete!");
+        break;
+    }
+    if (status.status === "error") {
+        console.error(\`Index build failed: \${status.error_message || 'Unknown error'}\`);
+        break;
+    }
+    await new Promise(resolve => setTimeout(resolve, 5000));
+}
+
+// 3. Search (for RAG)
+const query = "How does Memryx save cost?";
+const queryEmbedding = await model(query, { pooling: 'mean', normalize: true });
+const queryVector = Array.from(queryEmbedding.data);
+
+console.log(\`Searching for: '\${query}'\`);
+const searchResponse = await fetch(\`\${API_URL}/search\`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        api_key: API_KEY,
+        vector: queryVector,
+        k: 3
+    })
+});
+const searchResults = await searchResponse.json();
+
+// Use results for LLM context
+const context = searchResults.results
+    .map(r => r.metadata.text)
+    .join("\\n");
+
+console.log("\\n--- Retrieved Context ---");
+console.log(context);
+console.log("-------------------------");
+
+// Example of passing to an LLM (conceptual)
+// const llmResponse = await callLLM(\`Based on the following context, answer the question: \${query}\\nContext: \${context}\`);
+// console.log(\`LLM Response: \${llmResponse}\`);`}</code>
+                    </pre>
+                  </div>
+                  <p className="text-slate-400 text-sm">
+                    <strong>Install:</strong> <code className="text-cyan-400">npm install @xenova/transformers</code> or use <code className="text-cyan-400">@huggingface/inference</code> for server-side embeddings.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.section>
+
+          {/* Chatbot Example - JavaScript/TypeScript */}
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Card glow>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-cyan-500/10 rounded-lg flex items-center justify-center">
+                    <Code size={20} className="text-cyan-400" />
+                  </div>
+                  <CardTitle>Chatbot Example (JavaScript/TypeScript)</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-slate-400">
+                    Same chatbot example using Node.js/TypeScript. Works with Express, Next.js, or any Node.js environment.
+                  </p>
+                  <div className="bg-slate-950 rounded-lg p-4 border border-slate-800 overflow-x-auto">
+                    <pre className="text-sm text-slate-300">
+                      <code>{`import { pipeline } from '@xenova/transformers';
+
+// Setup
+const API_KEY = "memryx_sk_YOUR_KEY_HERE"; // Get from Memryx Portal
+const API_URL = "${API_BASE_URL}"; // Your Railway backend URL
+
+// Initialize embedding model
+const model = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+
+// 1. Add knowledge base
+const documents = [
+    "Memryx is a compressed memory engine for AI.",
+    "It delivers exact recall at a fraction of vector DB cost."
+];
+
+const vectorsToAdd = [];
+for (let i = 0; i < documents.length; i++) {
+    const embedding = await model(documents[i], { pooling: 'mean', normalize: true });
+    vectorsToAdd.push({
+        id: \`doc_\${i}\`,
+        values: Array.from(embedding.data),
+        metadata: { text: documents[i] }
+    });
+}
+
+await fetch(\`\${API_URL}/add\`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ api_key: API_KEY, vectors: vectorsToAdd })
+});
+
+// 2. Finalize index
+const { build_id } = await (await fetch(\`\${API_URL}/finalize\`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ api_key: API_KEY })
+})).json();
+
+// Wait for build
+while (true) {
+    const status = await (await fetch(\`\${API_URL}/finalize/status?build_id=\${build_id}\`)).json();
+    if (status.status === "ready") break;
+    await new Promise(resolve => setTimeout(resolve, 5000));
+}
+
+// 3. Search
+const queryEmbedding = await model("How does Memryx save cost?", { pooling: 'mean', normalize: true });
+const searchResults = await (await fetch(\`\${API_URL}/search\`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        api_key: API_KEY,
+        vector: Array.from(queryEmbedding.data),
+        k: 3
+    })
+})).json();
+
+// Use for LLM context
+const context = searchResults.results.map(r => r.metadata.text).join("\\n");`}</code>
+                    </pre>
+                  </div>
+                  <p className="text-slate-400 text-sm">
+                    <strong>Install:</strong> <code className="text-cyan-400">npm install @xenova/transformers</code>
                   </p>
                 </div>
               </CardContent>
@@ -358,8 +585,21 @@ context = "\\n".join([r["metadata"]["text"] for r in results["results"]])
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-slate-100 font-semibold mb-2">Do I need a URL or just an API key?</h3>
-                    <p className="text-slate-400">
-                      Just your API key! The base URL is <code className="text-cyan-400">{API_BASE_URL}</code> (or set via <code className="text-cyan-400">VITE_MCN_API_URL</code>). Your API key authenticates all requests.
+                    <p className="text-slate-400 mb-2">
+                      You need <strong>both</strong>:
+                    </p>
+                    <ul className="text-slate-400 space-y-2 mb-2">
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-400 mt-1">•</span>
+                        <span><strong>Base URL:</strong> Your Memryx backend URL (e.g., <code className="text-cyan-400">https://api.memryx.org</code> or your Railway URL). This is where your backend API is deployed.</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-cyan-400 mt-1">•</span>
+                        <span><strong>API Key:</strong> Your authentication key (starts with <code className="text-cyan-400">memryx_sk_</code>). Get this from your Portal after signing up.</span>
+                      </li>
+                    </ul>
+                    <p className="text-slate-400 text-sm">
+                      <strong>Note:</strong> The base URL is typically set once in your code (or environment variable), then you only need to change the API key per project/user.
                     </p>
                   </div>
                   <div>

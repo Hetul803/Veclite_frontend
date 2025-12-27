@@ -35,10 +35,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadUser = async () => {
     setIsLoading(true);
     try {
+      if (!supabase) {
+        console.error('❌ Supabase not initialized. Check environment variables.');
+        setUser(null);
+        return;
+      }
       const currentUser = await getCurrentUserFromDB();
       setUser(currentUser);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading user:', error);
+      // Don't show error to user on initial load (they might not be logged in)
+      if (error?.message?.includes('Supabase not configured')) {
+        console.error('❌ Supabase configuration error. Check Vercel environment variables.');
+      }
       setUser(null);
     } finally {
       setIsLoading(false);
