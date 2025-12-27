@@ -69,10 +69,24 @@ export function AuthCallback() {
           console.log('   Code:', code.substring(0, 20) + '...');
           
           try {
+            console.log('   Calling exchangeCodeForSession...');
             const { data: { session }, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+            
+            console.log('   Exchange response:', {
+              hasSession: !!session,
+              hasUser: !!session?.user,
+              userEmail: session?.user?.email,
+              hasError: !!exchangeError,
+              errorMessage: exchangeError?.message
+            });
             
             if (exchangeError) {
               console.error('❌ Code exchange error:', exchangeError);
+              console.error('   Error details:', {
+                message: exchangeError.message,
+                status: exchangeError.status,
+                name: exchangeError.name
+              });
               throw exchangeError;
             }
             
@@ -80,6 +94,16 @@ export function AuthCallback() {
               console.log('✅ Session created from code exchange:', session.user.email);
               console.log('   User ID:', session.user.id);
               console.log('   Email confirmed:', session.user.email_confirmed_at);
+              
+              // Wait a moment to ensure session is persisted
+              await new Promise(resolve => setTimeout(resolve, 500));
+              
+              // Verify session is still there
+              const { data: { session: verifySession } } = await supabase.auth.getSession();
+              if (!verifySession) {
+                console.warn('⚠️ Session not persisted, retrying...');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+              }
               
               setStatus('success');
               setMessage('✅ Email confirmed! Redirecting...');
@@ -90,13 +114,19 @@ export function AuthCallback() {
               setTimeout(() => {
                 console.log('🚀 Redirecting to /app');
                 navigate('/app', { replace: true });
-              }, 1000);
+              }, 1500);
               return;
             } else {
+              console.error('❌ Code exchange succeeded but no session found');
+              console.error('   Session object:', session);
               throw new Error('Code exchange succeeded but no session found');
             }
           } catch (exchangeErr: any) {
             console.error('❌ Code exchange failed:', exchangeErr);
+            console.error('   Error type:', exchangeErr?.constructor?.name);
+            console.error('   Error message:', exchangeErr?.message);
+            console.error('   Error stack:', exchangeErr?.stack);
+            
             setStatus('error');
             setMessage(`⚠️ Verification failed: ${exchangeErr.message || 'Code exchange error'}. Please try signing up again.`);
             setTimeout(() => {

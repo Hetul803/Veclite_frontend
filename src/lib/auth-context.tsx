@@ -23,7 +23,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         console.log('Auth state change:', event, session?.user?.email);
         if (event === 'SIGNED_IN' && session) {
+          console.log('   User signed in, loading user data...');
           await loadUser();
+          console.log('   User data loaded');
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
         } else if (event === 'TOKEN_REFRESHED') {
