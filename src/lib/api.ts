@@ -32,10 +32,15 @@ export interface UsageData {
 // Removed all mock data - using real Supabase data only
 
 export async function login(email: string, password: string): Promise<User> {
+  console.log('🔑 login() function called');
+  
   if (!supabase) {
+    console.error('❌ Supabase not configured');
     throw new Error('Supabase not configured. Please check your environment variables.');
   }
 
+  console.log('🔑 Calling supabase.auth.signInWithPassword...');
+  
   // Sign in with Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
@@ -44,6 +49,8 @@ export async function login(email: string, password: string): Promise<User> {
     console.error('Sign in network error:', err);
     throw new Error(`Network error: ${err.message || 'Failed to connect. Please check your internet connection.'}`);
   });
+  
+  console.log('🔑 Auth response received');
 
   if (authError) {
     console.error('Sign in auth error:', authError);
