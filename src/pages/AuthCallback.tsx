@@ -8,17 +8,22 @@ export function AuthCallback() {
   const [message, setMessage] = useState('Verifying your email...');
 
   useEffect(() => {
+    // Log immediately to confirm this component is rendering
+    console.log('✅ AuthCallback component mounted - callback route is accessible');
+    
     const handleAuthCallback = async () => {
       try {
         if (!supabase) {
+          console.error('❌ Supabase not configured');
           throw new Error('Supabase not configured');
         }
 
-        console.log('🔐 Auth callback started');
+        console.log('🔐 Auth callback handler started');
         console.log('   Full URL:', window.location.href);
         console.log('   Hash:', window.location.hash);
         console.log('   Search:', window.location.search);
         console.log('   Pathname:', window.location.pathname);
+        console.log('   Origin:', window.location.origin);
 
         // Wait a moment for Supabase client to process the URL (if it does automatically)
         await new Promise(resolve => setTimeout(resolve, 500));
