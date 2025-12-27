@@ -60,39 +60,72 @@ export async function login(email: string, password: string): Promise<User> {
     throw new Error('Sign in failed. Please try again.');
   }
 
+  console.log('✅ Auth successful, user ID:', authData.user.id);
+  console.log('✅ User email:', authData.user.email);
+
   // Get user data from database - simplified and fast
-  console.log('Fetching user data from database for:', authData.user.id);
+  console.log('📦 Fetching user data from database for:', authData.user.id);
   
   let userData = null;
   
-  // Try to get user from database (immediate)
+  // Try to get user from database (immediate) with timeout
   console.log('   Attempt 1: Fetching user...');
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', authData.user.id)
-    .single();
   
-  if (data && !error) {
-    userData = data;
-    console.log('✅ User found on first attempt');
-  } else {
-    console.log('   User not found, error:', error?.message || 'No data');
-    
-    // Wait 1 second and try once more
-    console.log('   Attempt 2: Waiting 1 second, then retrying...');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const { data: retryData, error: retryError } = await supabase
+  try {
+    const fetchPromise = supabase
       .from('users')
       .select('*')
       .eq('id', authData.user.id)
       .single();
     
-    if (retryData && !retryError) {
-      userData = retryData;
-      console.log('✅ User found on second attempt');
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Database query timeout')), 5000)
+    );
+    
+    const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any;
+    
+    if (data && !error) {
+      userData = data;
+      console.log('✅ User found on first attempt');
     } else {
+      console.log('   User not found, error:', error?.message || 'No data');
+      throw error || new Error('No data returned');
+    }
+  } catch (fetchError: any) {
+    if (fetchError?.message === 'Database query timeout') {
+      console.error('   Database query timed out after 5 seconds');
+    } else {
+      console.log('   First fetch failed:', fetchError?.message);
+    }
+  
+    // Wait 1 second and try once more
+    console.log('   Attempt 2: Waiting 1 second, then retrying...');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    try {
+      const retryPromise = supabase
+        .from('users')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+      
+      const retryTimeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Retry timeout')), 5000)
+      );
+      
+      const { data: retryData, error: retryError } = await Promise.race([retryPromise, retryTimeout]) as any;
+      
+      if (retryData && !retryError) {
+        userData = retryData;
+        console.log('✅ User found on second attempt');
+      } else {
+        throw retryError || new Error('No data on retry');
+      }
+    } catch (retryError: any) {
+      console.log('   Second attempt failed:', retryError?.message);
+      
+      // Create user record immediately (no more waiting)
+      console.log('   User still not found, creating manually...');
       // Create user record immediately (no more waiting)
       console.log('   User still not found, creating manually...');
       const apiKey = `memryx_sk_${authData.user.id.substring(0, 24)}${Math.random().toString(36).substring(2, 12)}`;

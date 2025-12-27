@@ -112,20 +112,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async (email: string, password: string) => {
+    console.log('🔐 Auth context: Starting login for:', email);
     setIsLoading(true);
     try {
-      console.log('Auth context: Starting login...');
+      console.log('🔐 Auth context: Calling apiLogin...');
       const user = await apiLogin(email, password);
-      console.log('Auth context: Login successful, user:', user?.email);
+      console.log('🔐 Auth context: apiLogin returned, user:', user?.email);
+      console.log('🔐 Auth context: Setting user in context...');
       setUser(user);
-      console.log('Auth context: User set in context');
-    } catch (error) {
-      console.error('Auth context: Login error:', error);
+      console.log('🔐 Auth context: User set successfully');
+    } catch (error: any) {
+      console.error('🔐 Auth context: Login error:', error);
+      console.error('🔐 Auth context: Error message:', error?.message);
       setUser(null);
       throw error;
     } finally {
       setIsLoading(false);
-      console.log('Auth context: Login completed, isLoading set to false');
+      console.log('🔐 Auth context: Login completed, isLoading set to false');
     }
   };
 
