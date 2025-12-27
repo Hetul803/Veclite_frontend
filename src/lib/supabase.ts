@@ -9,12 +9,46 @@ if (!supabaseUrl || !supabaseAnonKey) {
   const errorMsg = '❌ Supabase credentials not configured!\n' +
     `   VITE_SUPABASE_URL: ${supabaseUrl || 'MISSING'}\n` +
     `   VITE_SUPABASE_ANON_KEY: ${supabaseAnonKey ? 'SET' : 'MISSING'}\n` +
-    '   Please check your .env file and restart the dev server.';
+    '   Please check your Vercel environment variables and redeploy.';
   console.error(errorMsg);
   
   // In production, show user-friendly error
   if (typeof window !== 'undefined') {
     console.error('Supabase connection will fail. Check browser console for details.');
+  }
+} else {
+  // Log configuration (without exposing full key)
+  console.log('✅ Supabase configuration found:');
+  console.log('   URL:', supabaseUrl);
+  console.log('   Anon Key:', supabaseAnonKey.substring(0, 20) + '...');
+  
+  // Test DNS resolution
+  if (typeof window !== 'undefined') {
+    const urlObj = new URL(supabaseUrl);
+    const hostname = urlObj.hostname;
+    console.log('   Testing DNS resolution for:', hostname);
+    
+    // Try to fetch a simple endpoint to test connection
+    fetch(`${supabaseUrl}/rest/v1/`, {
+      method: 'HEAD',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`
+      }
+    })
+      .then(() => {
+        console.log('✅ Supabase URL is reachable');
+      })
+      .catch((err) => {
+        console.error('❌ Cannot reach Supabase URL:', err.message);
+        if (err.message?.includes('Failed to fetch') || err.message?.includes('ERR_NAME_NOT_RESOLVED')) {
+          console.error('   This usually means:');
+          console.error('   1. Supabase project is PAUSED - go to dashboard and restore it');
+          console.error('   2. URL is incorrect - check Vercel environment variables');
+          console.error('   3. DNS issue - check internet connection');
+          console.error('   URL being used:', supabaseUrl);
+        }
+      });
   }
 }
 

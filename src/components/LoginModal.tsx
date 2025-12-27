@@ -64,13 +64,26 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             cause: networkErr.cause
           });
           
-          // More specific error messages
+          // Check for DNS resolution error
           const errorMsg = networkErr.message || '';
-          if (errorMsg.includes('CORS') || errorMsg.includes('cors')) {
-            throw new Error('CORS error: Please check Supabase Authentication > URL Configuration and add http://localhost:5173 to allowed URLs.');
+          const errorName = networkErr.name || '';
+          
+          if (errorMsg.includes('ERR_NAME_NOT_RESOLVED') || errorMsg.includes('Failed to fetch') || errorName === 'AuthRetryableFetchError') {
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'NOT SET';
+            console.error('❌ DNS Resolution Failed for Supabase URL:', supabaseUrl);
+            console.error('   This usually means:');
+            console.error('   1. ⚠️  Supabase project is PAUSED - Go to https://supabase.com/dashboard');
+            console.error('      → Select your project → Settings → General → Restore project');
+            console.error('   2. ⚠️  Incorrect URL in Vercel environment variables');
+            console.error('      → Check VITE_SUPABASE_URL in Vercel settings');
+            console.error('   3. ⚠️  DNS/Network issue');
+            console.error('      → Check internet connection');
+            
+            throw new Error('Cannot connect to Supabase. The project might be paused. Go to Supabase Dashboard → Settings → General → Restore project. Then try again.');
           }
-          if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
-            throw new Error('Cannot connect to Supabase. Possible causes: 1) Project is paused (check dashboard), 2) Internet connection issue, 3) Incorrect URL. Check browser console for details.');
+          
+          if (errorMsg.includes('CORS') || errorMsg.includes('cors')) {
+            throw new Error('CORS error: Please check Supabase Authentication > URL Configuration and add your Vercel domain to allowed URLs.');
           }
           if (errorMsg.includes('timeout') || errorMsg.includes('Timeout')) {
             throw new Error('Connection timeout. Supabase project might be paused. Check dashboard and restore if needed.');
