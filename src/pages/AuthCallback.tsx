@@ -70,6 +70,29 @@ export function AuthCallback() {
           
           try {
             console.log('   Calling exchangeCodeForSession...');
+            
+            // Set up a promise that resolves when SIGNED_IN event fires
+            let sessionResolved = false;
+            const sessionPromise = new Promise<void>((resolve) => {
+              const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_IN' && session) {
+                  console.log('   SIGNED_IN event received in callback');
+                  sessionResolved = true;
+                  subscription.unsubscribe();
+                  resolve();
+                }
+              });
+              
+              // Timeout after 5 seconds
+              setTimeout(() => {
+                if (!sessionResolved) {
+                  console.warn('   Timeout waiting for SIGNED_IN event');
+                  subscription.unsubscribe();
+                  resolve();
+                }
+              }, 5000);
+            });
+            
             const { data: { session }, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
             
             console.log('   Exchange response:', {
@@ -90,20 +113,16 @@ export function AuthCallback() {
               throw exchangeError;
             }
             
-            if (session && session.user) {
-              console.log('✅ Session created from code exchange:', session.user.email);
-              console.log('   User ID:', session.user.id);
-              console.log('   Email confirmed:', session.user.email_confirmed_at);
-              
-              // Wait a moment to ensure session is persisted
-              await new Promise(resolve => setTimeout(resolve, 500));
-              
-              // Verify session is still there
-              const { data: { session: verifySession } } = await supabase.auth.getSession();
-              if (!verifySession) {
-                console.warn('⚠️ Session not persisted, retrying...');
-                await new Promise(resolve => setTimeout(resolve, 1000));
-              }
+            // Wait for SIGNED_IN event to fire (in case it's async)
+            await sessionPromise;
+            
+            // Get the session again to make sure we have it
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            
+            if (currentSession && currentSession.user) {
+              console.log('✅ Session confirmed:', currentSession.user.email);
+              console.log('   User ID:', currentSession.user.id);
+              console.log('   Email confirmed:', currentSession.user.email_confirmed_at);
               
               setStatus('success');
               setMessage('✅ Email confirmed! Redirecting...');
@@ -116,9 +135,21 @@ export function AuthCallback() {
                 navigate('/app', { replace: true });
               }, 1500);
               return;
+            } else if (session && session.user) {
+              // Fallback to original session if currentSession check fails
+              console.log('✅ Using original session:', session.user.email);
+              setStatus('success');
+              setMessage('✅ Email confirmed! Redirecting...');
+              window.history.replaceState({}, document.title, window.location.pathname);
+              setTimeout(() => {
+                console.log('🚀 Redirecting to /app');
+                navigate('/app', { replace: true });
+              }, 1500);
+              return;
             } else {
               console.error('❌ Code exchange succeeded but no session found');
-              console.error('   Session object:', session);
+              console.error('   Original session:', session);
+              console.error('   Current session:', currentSession);
               throw new Error('Code exchange succeeded but no session found');
             }
           } catch (exchangeErr: any) {
