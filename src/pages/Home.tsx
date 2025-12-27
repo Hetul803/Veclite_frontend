@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useSearchParams } from 'react-router-dom';
 import { ArrowRight, Database, Zap, TrendingUp, CheckCircle2, ArrowDown } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Button } from '../ui/Button';
@@ -10,6 +11,22 @@ import { LoginModal } from '../components/LoginModal';
 
 export function Home() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  // Redirect auth errors to callback handler
+  useEffect(() => {
+    const error = searchParams.get('error');
+    const errorCode = searchParams.get('error_code');
+    const hash = window.location.hash;
+    
+    // Check if there are auth errors in URL (from Supabase redirect)
+    if (error || errorCode || (hash && hash.includes('error'))) {
+      // Redirect to callback route which will handle the error properly
+      const currentUrl = window.location.href;
+      const callbackUrl = currentUrl.replace(window.location.pathname, '/auth/callback');
+      window.location.replace(callbackUrl);
+    }
+  }, [searchParams]);
 
   const scrollToBenchmarks = () => {
     document.getElementById('benchmarks')?.scrollIntoView({ behavior: 'smooth' });
