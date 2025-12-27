@@ -14,60 +14,86 @@ export function AuthCallback() {
           throw new Error('Supabase not configured');
         }
 
-        // Get the hash from URL (Supabase PKCE flow uses hash fragments)
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const error = hashParams.get('error');
-        const errorDescription = hashParams.get('error_description');
+        console.log('Auth callback - URL:', window.location.href);
+        console.log('Auth callback - Hash:', window.location.hash);
+        console.log('Auth callback - Search:', window.location.search);
 
-        if (error) {
-          throw new Error(errorDescription || error);
+        // Supabase PKCE flow uses hash fragments (#) for tokens
+        // The Supabase client should automatically handle this with detectSessionInUrl: true
+        // But we'll also manually check and set the session
+        
+        // Check if there's a hash with tokens
+        const hash = window.location.hash;
+        if (hash && hash.includes('access_token')) {
+          // Parse hash fragments
+          const hashParams = new URLSearchParams(hash.substring(1));
+          const accessToken = hashParams.get('access_token');
+          const refreshToken = hashParams.get('refresh_token');
+          const error = hashParams.get('error');
+          const errorDescription = hashParams.get('error_description');
+
+          if (error) {
+            throw new Error(errorDescription || error);
+          }
+
+          if (accessToken && refreshToken) {
+            console.log('Setting session from hash tokens...');
+            // Set the session explicitly
+            const { data: { session }, error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+
+            if (sessionError) {
+              console.error('Session error:', sessionError);
+              throw sessionError;
+            }
+
+            if (session) {
+              console.log('Session created successfully:', session.user.email);
+              setStatus('success');
+              setMessage('✅ Email confirmed! Redirecting...');
+              
+              // Clear the hash from URL
+              window.history.replaceState({}, document.title, window.location.pathname);
+              
+              // Wait a moment then redirect
+              setTimeout(() => {
+                navigate('/app');
+              }, 1500);
+              return;
+            }
+          }
         }
 
-        if (accessToken) {
-          // Set the session
-          const { data: { session }, error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: hashParams.get('refresh_token') || '',
-          });
+        // Fallback: Try to get existing session (Supabase client might have already processed it)
+        console.log('Checking for existing session...');
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Get session error:', sessionError);
+          throw sessionError;
+        }
 
-          if (sessionError) {
-            throw sessionError;
-          }
-
-          if (session) {
-            setStatus('success');
-            setMessage('✅ Email confirmed! Redirecting...');
-            
-            // Wait a moment then redirect
-            setTimeout(() => {
-              navigate('/app');
-            }, 1500);
-          } else {
-            throw new Error('Failed to create session');
-          }
-        } else {
-          // Try to get session from URL (fallback)
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (session && session.user) {
+          console.log('Found existing session:', session.user.email);
+          setStatus('success');
+          setMessage('✅ Email confirmed! Redirecting...');
           
-          if (sessionError) {
-            throw sessionError;
-          }
-
-          if (session) {
-            setStatus('success');
-            setMessage('✅ Email confirmed! Redirecting...');
-            setTimeout(() => {
-              navigate('/app');
-            }, 1500);
-          } else {
-            // No session found - might already be confirmed or link expired
-            setStatus('error');
-            setMessage('⚠️ Unable to verify. The link may have expired. Please try signing in.');
-            setTimeout(() => {
-              navigate('/');
-            }, 3000);
-          }
+          // Clear the hash from URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+          
+          setTimeout(() => {
+            navigate('/app');
+          }, 1500);
+        } else {
+          // No session found - might already be confirmed or link expired
+          console.warn('No session found after callback');
+          setStatus('error');
+          setMessage('⚠️ Unable to verify. The link may have expired or already been used. Please try signing in.');
+          setTimeout(() => {
+            navigate('/');
+          }, 3000);
         }
       } catch (err: any) {
         console.error('Auth callback error:', err);
