@@ -61,7 +61,7 @@ if (supabaseUrl && supabaseAnonKey) {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: true,
+        detectSessionInUrl: false, // We'll handle this manually in AuthCallback
         flowType: 'pkce',
         storage: typeof window !== 'undefined' ? window.localStorage : undefined
       },

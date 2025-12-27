@@ -14,30 +14,42 @@ export function AuthCallback() {
           throw new Error('Supabase not configured');
         }
 
-        console.log('Auth callback - URL:', window.location.href);
-        console.log('Auth callback - Hash:', window.location.hash);
-        console.log('Auth callback - Search:', window.location.search);
+        console.log('🔐 Auth callback started');
+        console.log('   Full URL:', window.location.href);
+        console.log('   Hash:', window.location.hash);
+        console.log('   Search:', window.location.search);
+        console.log('   Pathname:', window.location.pathname);
 
-        // Supabase PKCE flow uses hash fragments (#) for tokens
-        // The Supabase client should automatically handle this with detectSessionInUrl: true
-        // But we'll also manually check and set the session
-        
+        // Wait a moment for Supabase client to process the URL (if it does automatically)
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Check if there's a hash with tokens
         const hash = window.location.hash;
-        if (hash && hash.includes('access_token')) {
+        const hasHashTokens = hash && (hash.includes('access_token') || hash.includes('type=recovery'));
+
+        if (hasHashTokens) {
+          console.log('📦 Found hash tokens, parsing...');
+          
           // Parse hash fragments
           const hashParams = new URLSearchParams(hash.substring(1));
           const accessToken = hashParams.get('access_token');
           const refreshToken = hashParams.get('refresh_token');
           const error = hashParams.get('error');
           const errorDescription = hashParams.get('error_description');
+          const type = hashParams.get('type');
+
+          console.log('   Token type:', type);
+          console.log('   Has access_token:', !!accessToken);
+          console.log('   Has refresh_token:', !!refreshToken);
 
           if (error) {
+            console.error('❌ Error in hash:', error, errorDescription);
             throw new Error(errorDescription || error);
           }
 
           if (accessToken && refreshToken) {
-            console.log('Setting session from hash tokens...');
+            console.log('🔑 Setting session from hash tokens...');
+            
             // Set the session explicitly
             const { data: { session }, error: sessionError } = await supabase.auth.setSession({
               access_token: accessToken,
@@ -45,12 +57,14 @@ export function AuthCallback() {
             });
 
             if (sessionError) {
-              console.error('Session error:', sessionError);
+              console.error('❌ Session error:', sessionError);
               throw sessionError;
             }
 
-            if (session) {
-              console.log('Session created successfully:', session.user.email);
+            if (session && session.user) {
+              console.log('✅ Session created successfully:', session.user.email);
+              console.log('   User ID:', session.user.id);
+              
               setStatus('success');
               setMessage('✅ Email confirmed! Redirecting...');
               
@@ -59,24 +73,31 @@ export function AuthCallback() {
               
               // Wait a moment then redirect
               setTimeout(() => {
-                navigate('/app');
-              }, 1500);
+                console.log('🚀 Redirecting to /app');
+                navigate('/app', { replace: true });
+              }, 1000);
               return;
+            } else {
+              throw new Error('Session created but no user found');
             }
+          } else {
+            console.warn('⚠️ Hash found but missing tokens');
           }
         }
 
         // Fallback: Try to get existing session (Supabase client might have already processed it)
-        console.log('Checking for existing session...');
+        console.log('🔍 Checking for existing session...');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
-          console.error('Get session error:', sessionError);
+          console.error('❌ Get session error:', sessionError);
           throw sessionError;
         }
 
         if (session && session.user) {
-          console.log('Found existing session:', session.user.email);
+          console.log('✅ Found existing session:', session.user.email);
+          console.log('   User ID:', session.user.id);
+          
           setStatus('success');
           setMessage('✅ Email confirmed! Redirecting...');
           
@@ -84,28 +105,43 @@ export function AuthCallback() {
           window.history.replaceState({}, document.title, window.location.pathname);
           
           setTimeout(() => {
-            navigate('/app');
-          }, 1500);
+            console.log('🚀 Redirecting to /app');
+            navigate('/app', { replace: true });
+          }, 1000);
         } else {
           // No session found - might already be confirmed or link expired
-          console.warn('No session found after callback');
+          console.warn('⚠️ No session found after callback');
+          console.log('   Hash:', hash);
+          console.log('   This might mean:');
+          console.log('   1. Link already used');
+          console.log('   2. Link expired');
+          console.log('   3. Email already confirmed');
+          
           setStatus('error');
           setMessage('⚠️ Unable to verify. The link may have expired or already been used. Please try signing in.');
           setTimeout(() => {
-            navigate('/');
+            navigate('/', { replace: true });
           }, 3000);
         }
       } catch (err: any) {
-        console.error('Auth callback error:', err);
+        console.error('❌ Auth callback error:', err);
+        console.error('   Error message:', err.message);
+        console.error('   Error stack:', err.stack);
+        
         setStatus('error');
         setMessage(err.message || 'Verification failed. Please try again.');
         setTimeout(() => {
-          navigate('/');
+          navigate('/', { replace: true });
         }, 3000);
       }
     };
 
-    handleAuthCallback();
+    // Small delay to ensure component is mounted
+    const timer = setTimeout(() => {
+      handleAuthCallback();
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [navigate]);
 
   return (
