@@ -41,31 +41,21 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         let authData, signUpError;
         try {
           console.log('Calling supabase.auth.signUp...');
-          // Use environment variable for production, fallback to current origin for local dev
-          let frontendUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
           
-          // Ensure URL has protocol (https:// or http://)
-          if (frontendUrl && !frontendUrl.startsWith('http://') && !frontendUrl.startsWith('https://')) {
-            frontendUrl = `https://${frontendUrl}`;
-          }
-          
-          // Use /auth/callback route for email confirmation
-          const redirectUrl = `${frontendUrl}/auth/callback`;
-          
-          console.log('Signup redirect URL:', redirectUrl);
-          
+          // Since email verification is disabled, user will be signed in immediately
+          // No need for redirect URL
           const result = await supabase.auth.signUp({
             email,
             password,
-            options: {
-              emailRedirectTo: redirectUrl,
-            }
           });
+          
           console.log('SignUp result:', { 
             hasUser: !!result.data?.user, 
+            hasSession: !!result.data?.session,
             hasError: !!result.error,
             error: result.error?.message 
           });
+          
           authData = result.data;
           signUpError = result.error;
         } catch (networkErr: any) {
@@ -120,9 +110,13 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             throw new Error(signUpError.message || 'Failed to sign up. Please try again.');
           }
 
-          // Check if user was created (might be null if email confirmation is required)
+          // Check if user was created
           if (!authData.user) {
-            // This can happen if email confirmation is required
+            // This can happen if email confirmation is required (but we disabled it)
+            // Or if there was an error
+            if (signUpError) {
+              throw new Error(signUpError.message || 'Failed to create account');
+            }
             setError('✅ Sign up successful! Please check your email to verify your account. Click the confirmation link within 1 hour.');
             setTimeout(() => {
               setIsSignUp(false);
@@ -132,14 +126,51 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             return;
           }
 
-          // User created successfully - will be created in database via trigger
-          console.log('✅ User created, attempting auto-login...');
-          setError('✅ Sign up successful! Logging you in...');
+          // User created successfully - with email verification disabled, user is already signed in
+          console.log('✅ User created:', authData.user.email);
+          console.log('   Has session:', !!authData.session);
           
-          // Wait a moment for database trigger to create user record
+          // If we have a session, user is already signed in (email verification disabled)
+          if (authData.session) {
+            console.log('   User is already signed in (email verification disabled)');
+            setError('✅ Account created! Setting up your account...');
+            
+            // Wait for database trigger to create user record (with retries)
+            let userRecordCreated = false;
+            let retries = 5;
+            
+            while (retries > 0 && !userRecordCreated) {
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+              
+              try {
+                // Try to get user from database
+                const { data: { user: currentAuthUser } } = await supabase.auth.getUser();
+                if (currentAuthUser) {
+                  // User data should be loaded by auth context
+                  // Just wait a bit more and then navigate
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  userRecordCreated = true;
+                }
+              } catch (err) {
+                console.log(`   Waiting for user record... (${retries} attempts left)`);
+              }
+              retries--;
+            }
+            
+            console.log('   Navigating to /app');
+            setIsSignUp(false);
+            onClose();
+            navigate('/app');
+            return;
+          }
+          
+          // If no session, try to sign in (fallback)
+          console.log('   No session found, attempting sign in...');
+          setError('✅ Account created! Logging you in...');
+          
+          // Wait a moment for database trigger
           await new Promise(resolve => setTimeout(resolve, 2000));
           
-          // Try to sign in automatically
           try {
             await login(email, password);
             setIsSignUp(false);
@@ -147,7 +178,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             navigate('/app');
           } catch (loginErr: any) {
             console.error('Auto-login failed:', loginErr);
-            // If auto-login fails, user needs to sign in manually
             setIsSignUp(false);
             setError('✅ Account created! Please sign in with your email and password.');
             setTimeout(() => {
