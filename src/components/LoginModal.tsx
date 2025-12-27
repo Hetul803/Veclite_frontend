@@ -161,9 +161,16 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           throw new Error('Supabase not configured. Please check your environment variables and restart the server.');
         }
         
-        await login(email, password);
-        onClose();
-        navigate('/app');
+        console.log('Attempting login for:', email);
+        try {
+          await login(email, password);
+          console.log('Login successful, closing modal and navigating...');
+          onClose();
+          navigate('/app');
+        } catch (loginErr: any) {
+          console.error('Login failed:', loginErr);
+          throw loginErr; // Re-throw to be caught by outer catch
+        }
       }
     } catch (err: any) {
       console.error('Auth error:', err);

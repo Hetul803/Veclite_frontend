@@ -121,16 +121,47 @@ export async function getCurrentUserFromDB(): Promise<User | null> {
   }
   
   try {
-    const supabaseUser = await getCurrentUser();
-    if (!supabaseUser) return null;
+    // First check if we have an auth user
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !authUser) {
+      console.log('   No authenticated user found');
+      return null;
+    }
+    
+    console.log('   Fetching user from database for ID:', authUser.id);
+    
+    // Get user from database
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', authUser.id)
+      .single();
+    
+    if (userError) {
+      if (userError.code === 'PGRST116') {
+        // No rows returned - user doesn't exist in database yet
+        console.warn('   User not found in database (PGRST116)');
+        return null;
+      }
+      console.error('   Database error:', userError);
+      throw new Error(`Database error: ${userError.message}`);
+    }
+    
+    if (!userData) {
+      console.warn('   User data is null');
+      return null;
+    }
+    
+    console.log('   User found in database:', userData.email);
     
     return {
-      id: supabaseUser.id,
-      email: supabaseUser.email,
-      plan: supabaseUser.plan,
-      isAdmin: supabaseUser.is_admin,
-      apiKey: supabaseUser.api_key,
-      created_at: supabaseUser.created_at,
+      id: userData.id,
+      email: userData.email,
+      plan: userData.plan,
+      isAdmin: userData.is_admin,
+      apiKey: userData.api_key,
+      created_at: userData.created_at,
     };
   } catch (error: any) {
     console.error('Error getting current user from DB:', error);
@@ -140,6 +171,10 @@ export async function getCurrentUserFromDB(): Promise<User | null> {
       console.error('   1. Supabase project is active (not paused)');
       console.error('   2. Environment variables are set in Vercel');
       console.error('   3. Vercel project was redeployed after adding variables');
+    }
+    // Don't throw for "not found" errors - just return null
+    if (error?.message?.includes('not found') || error?.message?.includes('No rows') || error?.code === 'PGRST116') {
+      return null;
     }
     throw error;
   }

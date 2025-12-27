@@ -44,42 +44,80 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!supabase) {
         console.error('❌ Supabase not initialized. Check environment variables.');
         setUser(null);
+        setIsLoading(false);
         return;
       }
       
       // Check if user is authenticated first
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.log('   Auth error (user not authenticated):', authError.message);
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+      
       if (!authUser) {
         console.log('   No authenticated user, skipping database lookup');
         setUser(null);
+        setIsLoading(false);
         return;
       }
       
       console.log('   Loading user data from database for:', authUser.email);
-      const currentUser = await getCurrentUserFromDB();
       
-      if (!currentUser) {
-        console.warn('   User not found in database yet. This might be a new signup - database trigger may still be running.');
-        // Don't set user to null if auth session exists - let the app handle it
-        // The user record will be created by the database trigger
-        setUser(null);
-        return;
+      // Try to get user from database, with retry logic for new signups
+      let currentUser = null;
+      let retries = 3;
+      
+      while (retries > 0 && !currentUser) {
+        try {
+          currentUser = await getCurrentUserFromDB();
+          if (currentUser) {
+            break;
+          }
+          
+          if (retries > 1) {
+            console.log(`   User not found, retrying... (${retries - 1} attempts left)`);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+          }
+          retries--;
+        } catch (dbError: any) {
+          console.warn('   Database lookup error:', dbError.message);
+          if (dbError?.message?.includes('not found') || dbError?.message?.includes('No rows')) {
+            // User doesn't exist yet - this is OK for new signups
+            if (retries > 1) {
+              console.log(`   User record not created yet, retrying... (${retries - 1} attempts left)`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            retries--;
+          } else {
+            // Other error - don't retry
+            throw dbError;
+          }
+        }
       }
       
-      setUser(currentUser);
-      console.log('   User data loaded successfully');
+      if (currentUser) {
+        setUser(currentUser);
+        console.log('   User data loaded successfully');
+      } else {
+        console.warn('   User record not found in database after retries. Auth session exists but no DB record.');
+        console.warn('   This might mean the database trigger failed. User can still use the app.');
+        // Set user to null but don't throw - auth session is valid
+        setUser(null);
+      }
     } catch (error: any) {
       console.error('Error loading user:', error);
       // Don't show error to user on initial load (they might not be logged in)
       if (error?.message?.includes('Supabase not configured')) {
         console.error('❌ Supabase configuration error. Check Vercel environment variables.');
-      } else if (error?.message?.includes('not found') || error?.message?.includes('No rows')) {
-        console.warn('   User record not found in database yet - this is normal for new signups');
-        // Don't throw - just set user to null, auth session is still valid
       }
       setUser(null);
     } finally {
       setIsLoading(false);
+      console.log('   loadUser completed, isLoading set to false');
     }
   };
 
