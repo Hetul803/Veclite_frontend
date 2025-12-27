@@ -25,6 +25,41 @@ export function AuthCallback() {
         console.log('   Pathname:', window.location.pathname);
         console.log('   Origin:', window.location.origin);
 
+        // Check for errors in query params or hash FIRST
+        const searchParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        
+        const error = searchParams.get('error') || hashParams.get('error');
+        const errorCode = searchParams.get('error_code') || hashParams.get('error_code');
+        const errorDescription = searchParams.get('error_description') || hashParams.get('error_description');
+
+        if (error) {
+          console.error('❌ Error in callback:', error, errorCode, errorDescription);
+          
+          if (errorCode === 'otp_expired') {
+            setStatus('error');
+            setMessage('⚠️ Email confirmation link has expired. Please request a new confirmation email or sign up again.');
+            setTimeout(() => {
+              navigate('/', { replace: true });
+            }, 5000);
+            return;
+          } else if (errorCode === 'access_denied') {
+            setStatus('error');
+            setMessage('⚠️ Access denied. The link may be invalid or expired. Please sign up again.');
+            setTimeout(() => {
+              navigate('/', { replace: true });
+            }, 5000);
+            return;
+          } else {
+            setStatus('error');
+            setMessage(`⚠️ Verification failed: ${errorDescription || error}. Please try signing up again.`);
+            setTimeout(() => {
+              navigate('/', { replace: true });
+            }, 5000);
+            return;
+          }
+        }
+
         // Wait a moment for Supabase client to process the URL (if it does automatically)
         await new Promise(resolve => setTimeout(resolve, 500));
 
