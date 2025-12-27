@@ -55,7 +55,7 @@ export function Home() {
             className="text-center max-w-4xl mx-auto"
           >
             <Badge variant="cyan" className="mb-6">
-              Production-Ready Vector Memory
+              Vector Database designed for long-term AI memory.
             </Badge>
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-500 bg-clip-text text-transparent leading-tight">

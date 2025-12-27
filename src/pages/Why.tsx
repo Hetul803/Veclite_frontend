@@ -30,6 +30,42 @@ export function Why() {
             <Card glow>
               <div className="flex items-start gap-4 mb-6">
                 <div className="w-12 h-12 bg-cyan-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Target size={24} className="text-cyan-400" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-slate-100 mb-4">Why Not Just Use FAISS?</h2>
+                  <p className="text-slate-300 leading-relaxed mb-4">
+                    FAISS is excellent for high-throughput, low-latency search.
+                  </p>
+                  <p className="text-slate-300 leading-relaxed mb-4">
+                    However, it stores every vector in full and does not optimize for storage cost.
+                  </p>
+                  <p className="text-slate-300 leading-relaxed mb-4">
+                    Memryx targets a different problem:
+                  </p>
+                  <ul className="space-y-2 text-slate-300 mb-6">
+                    <li className="flex items-start gap-2">
+                      <span className="text-cyan-400 mt-1">•</span>
+                      <span>long-term memory where datasets grow continuously</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-cyan-400 mt-1">•</span>
+                      <span>and storage efficiency matters more than microsecond latency.</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </Card>
+          </motion.section>
+
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <Card glow>
+              <div className="flex items-start gap-4 mb-6">
+                <div className="w-12 h-12 bg-cyan-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
                   <DollarSign size={24} className="text-cyan-400" />
                 </div>
                 <div>
