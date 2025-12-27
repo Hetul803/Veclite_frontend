@@ -32,6 +32,9 @@ export function AuthCallback() {
         const error = searchParams.get('error') || hashParams.get('error');
         const errorCode = searchParams.get('error_code') || hashParams.get('error_code');
         const errorDescription = searchParams.get('error_description') || hashParams.get('error_description');
+        
+        // Check for PKCE code in query params (Supabase PKCE flow)
+        const code = searchParams.get('code');
 
         if (error) {
           console.error('❌ Error in callback:', error, errorCode, errorDescription);
@@ -60,10 +63,53 @@ export function AuthCallback() {
           }
         }
 
+        // Handle PKCE code exchange (Supabase sends ?code=... instead of #access_token=...)
+        if (code && !error) {
+          console.log('📦 Found PKCE code, exchanging for session...');
+          console.log('   Code:', code.substring(0, 20) + '...');
+          
+          try {
+            const { data: { session }, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+            
+            if (exchangeError) {
+              console.error('❌ Code exchange error:', exchangeError);
+              throw exchangeError;
+            }
+            
+            if (session && session.user) {
+              console.log('✅ Session created from code exchange:', session.user.email);
+              console.log('   User ID:', session.user.id);
+              console.log('   Email confirmed:', session.user.email_confirmed_at);
+              
+              setStatus('success');
+              setMessage('✅ Email confirmed! Redirecting...');
+              
+              // Clear the code from URL
+              window.history.replaceState({}, document.title, window.location.pathname);
+              
+              setTimeout(() => {
+                console.log('🚀 Redirecting to /app');
+                navigate('/app', { replace: true });
+              }, 1000);
+              return;
+            } else {
+              throw new Error('Code exchange succeeded but no session found');
+            }
+          } catch (exchangeErr: any) {
+            console.error('❌ Code exchange failed:', exchangeErr);
+            setStatus('error');
+            setMessage(`⚠️ Verification failed: ${exchangeErr.message || 'Code exchange error'}. Please try signing up again.`);
+            setTimeout(() => {
+              navigate('/', { replace: true });
+            }, 5000);
+            return;
+          }
+        }
+
         // Wait a moment for Supabase client to process the URL (if it does automatically)
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Check if there's a hash with tokens
+        // Check if there's a hash with tokens (fallback for non-PKCE flow)
         const hash = window.location.hash;
         console.log('🔍 Checking hash:', hash);
         console.log('   Hash length:', hash?.length);
