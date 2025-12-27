@@ -39,7 +39,8 @@ export function Portal() {
     // Check if user is authenticated (even if user data not loaded yet)
     const checkAuth = async () => {
       // Import supabase dynamically to avoid build issues
-      const { supabase: supabaseClient } = await import('../lib/supabase');
+      const supabaseModule = await import('../lib/supabase');
+      const supabaseClient = supabaseModule.supabase;
       
       if (!supabaseClient) {
         setIsLoginOpen(true);
