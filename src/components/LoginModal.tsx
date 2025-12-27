@@ -193,8 +193,15 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         
         console.log('Attempting login for:', email);
         try {
-          await login(email, password);
+          const loginResult = await Promise.race([
+            login(email, password),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Login timeout - please try again')), 10000)
+            )
+          ]) as any;
+          
           console.log('Login successful, closing modal and navigating...');
+          setIsSignUp(false);
           onClose();
           navigate('/app');
         } catch (loginErr: any) {
