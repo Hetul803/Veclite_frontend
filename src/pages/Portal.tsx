@@ -38,12 +38,15 @@ export function Portal() {
   useEffect(() => {
     // Check if user is authenticated (even if user data not loaded yet)
     const checkAuth = async () => {
-      if (!supabase) {
+      // Import supabase dynamically to avoid build issues
+      const { supabase: supabaseClient } = await import('../lib/supabase');
+      
+      if (!supabaseClient) {
         setIsLoginOpen(true);
         return;
       }
       
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await supabaseClient.auth.getSession();
       
       // If no auth session, show login
       if (!session) {
