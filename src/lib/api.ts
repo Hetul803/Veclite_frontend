@@ -61,17 +61,73 @@ export async function login(email: string, password: string): Promise<User> {
   }
 
   // Get user data from database - user must exist
-  const { data: userData, error: userError } = await supabase
+  let userData = null;
+  let userError = null;
+  
+  // Try to get user from database
+  const { data, error } = await supabase
     .from('users')
     .select('*')
     .eq('id', authData.user.id)
     .single();
+  
+  userData = data;
+  userError = error;
 
+  // If user doesn't exist, wait for database trigger (for new signups)
   if (userError || !userData) {
-    // User doesn't exist in database - sign in only works for existing users
-    // Sign out the user since they don't have a profile
-    await supabase.auth.signOut();
-    throw new Error('User account not found. Please sign up first.');
+    console.log('User not found in database, waiting for trigger...');
+    
+    // Retry a few times (database trigger might be slow)
+    let retries = 5;
+    while (retries > 0 && (!userData || userError)) {
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+      
+      const { data: retryData, error: retryError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+      
+      if (retryData && !retryError) {
+        userData = retryData;
+        userError = null;
+        console.log('User record found after retry');
+        break;
+      }
+      
+      retries--;
+      console.log(`User still not found, retrying... (${retries} attempts left)`);
+    }
+    
+    // If still not found, try to create it manually (fallback)
+    if (!userData || userError) {
+      console.warn('User record not created by trigger, creating manually...');
+      
+      // Generate API key
+      const apiKey = `memryx_sk_${authData.user.id.substring(0, 24)}${Math.random().toString(36).substring(2, 12)}`;
+      
+      const { data: newUserData, error: createError } = await supabase
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          email: authData.user.email,
+          plan: 'free',
+          api_key: apiKey,
+          is_admin: false,
+        })
+        .select()
+        .single();
+      
+      if (createError || !newUserData) {
+        console.error('Failed to create user record:', createError);
+        // Don't sign out - let them try again
+        throw new Error('User account setup incomplete. Please try signing in again in a few seconds.');
+      }
+      
+      userData = newUserData;
+      console.log('User record created manually');
+    }
   }
 
   return {
