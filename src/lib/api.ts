@@ -60,99 +60,86 @@ export async function login(email: string, password: string): Promise<User> {
     throw new Error('Sign in failed. Please try again.');
   }
 
-  // Get user data from database - with timeout to prevent infinite hanging
-  console.log('Fetching user data from database...');
+  // Get user data from database - simplified and fast
+  console.log('Fetching user data from database for:', authData.user.id);
   
-  const loginWithTimeout = async (timeoutMs: number = 8000) => {
-    return Promise.race([
-      (async () => {
-        // Try to get user from database
-        let userData = null;
-        let userError = null;
-        
-        // First attempt
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', authData.user.id)
-          .single();
-        
-        userData = data;
-        userError = error;
-        
-        // If not found, wait 2 seconds and try once more (for database trigger)
-        if (userError || !userData) {
-          console.log('User not found, waiting 2 seconds for database trigger...');
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          
-          const { data: retryData, error: retryError } = await supabase
+  let userData = null;
+  
+  // Try to get user from database (immediate)
+  console.log('   Attempt 1: Fetching user...');
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', authData.user.id)
+    .single();
+  
+  if (data && !error) {
+    userData = data;
+    console.log('✅ User found on first attempt');
+  } else {
+    console.log('   User not found, error:', error?.message || 'No data');
+    
+    // Wait 1 second and try once more
+    console.log('   Attempt 2: Waiting 1 second, then retrying...');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    const { data: retryData, error: retryError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', authData.user.id)
+      .single();
+    
+    if (retryData && !retryError) {
+      userData = retryData;
+      console.log('✅ User found on second attempt');
+    } else {
+      // Create user record immediately (no more waiting)
+      console.log('   User still not found, creating manually...');
+      const apiKey = `memryx_sk_${authData.user.id.substring(0, 24)}${Math.random().toString(36).substring(2, 12)}`;
+      
+      console.log('   Inserting user record...');
+      const { data: newUserData, error: createError } = await supabase
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          email: authData.user.email,
+          plan: 'free',
+          api_key: apiKey,
+          is_admin: false,
+        })
+        .select()
+        .single();
+      
+      if (createError) {
+        console.error('   Insert error:', createError);
+        // If duplicate, fetch it
+        if (createError.code === '23505' || createError.message?.includes('duplicate')) {
+          console.log('   Duplicate key - fetching existing user...');
+          const { data: existingData } = await supabase
             .from('users')
             .select('*')
             .eq('id', authData.user.id)
             .single();
           
-          if (retryData && !retryError) {
-            userData = retryData;
-            userError = null;
-            console.log('✅ User record found after retry');
+          if (existingData) {
+            userData = existingData;
+            console.log('✅ User found after duplicate error');
+          } else {
+            throw new Error('User account exists but cannot be accessed. Please contact support.');
           }
+        } else {
+          throw new Error(`Account setup failed: ${createError.message || 'Unknown error'}. Error code: ${createError.code}`);
         }
-        
-        // If still not found, try to create it manually
-        if (!userData || userError) {
-          console.log('User record not found, creating manually...');
-          
-          const apiKey = `memryx_sk_${authData.user.id.substring(0, 24)}${Math.random().toString(36).substring(2, 12)}`;
-          
-          const { data: newUserData, error: createError } = await supabase
-            .from('users')
-            .insert({
-              id: authData.user.id,
-              email: authData.user.email,
-              plan: 'free',
-              api_key: apiKey,
-              is_admin: false,
-            })
-            .select()
-            .single();
-          
-          if (createError) {
-            // If duplicate, try fetching one more time
-            if (createError.code === '23505' || createError.message?.includes('duplicate')) {
-              console.log('Duplicate key - user exists, fetching...');
-              const { data: finalData } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', authData.user.id)
-                .single();
-              
-              if (finalData) {
-                userData = finalData;
-              } else {
-                throw new Error('User account setup incomplete. Please try again.');
-              }
-            } else {
-              throw new Error(`Account setup failed: ${createError.message || 'Unknown error'}`);
-            }
-          } else if (newUserData) {
-            userData = newUserData;
-            console.log('✅ User record created manually');
-          }
-        }
-        
-        if (!userData) {
-          throw new Error('User account not found. Please sign up first.');
-        }
-        
-        return userData;
-      })(),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Login timeout - please try again')), timeoutMs)
-      )
-    ]);
-  };
+      } else if (newUserData) {
+        userData = newUserData;
+        console.log('✅ User record created manually');
+      }
+    }
+  }
   
-  const userData = await loginWithTimeout(8000) as any;
+  if (!userData) {
+    throw new Error('User account not found. Please sign up first.');
+  }
 
   return {
     id: userData.id,
