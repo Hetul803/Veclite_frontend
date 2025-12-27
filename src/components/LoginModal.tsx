@@ -41,11 +41,17 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         let authData, signUpError;
         try {
           console.log('Calling supabase.auth.signUp...');
+          // Use environment variable for production, fallback to current origin for local dev
+          const frontendUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
+          const redirectUrl = `${frontendUrl}/app`;
+          
+          console.log('Signup redirect URL:', redirectUrl);
+          
           const result = await supabase.auth.signUp({
             email,
             password,
             options: {
-              emailRedirectTo: `${window.location.origin}/app`,
+              emailRedirectTo: redirectUrl,
             }
           });
           console.log('SignUp result:', { 
