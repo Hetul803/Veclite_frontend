@@ -126,8 +126,6 @@ export async function login(email: string, password: string): Promise<User> {
       
       // Create user record immediately (no more waiting)
       console.log('   User still not found, creating manually...');
-      // Create user record immediately (no more waiting)
-      console.log('   User still not found, creating manually...');
       const apiKey = `memryx_sk_${authData.user.id.substring(0, 24)}${Math.random().toString(36).substring(2, 12)}`;
       
       console.log('   Inserting user record...');
