@@ -43,7 +43,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           console.log('Calling supabase.auth.signUp...');
           // Use environment variable for production, fallback to current origin for local dev
           const frontendUrl = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
-          const redirectUrl = `${frontendUrl}/app`;
+          // Use /auth/callback route for email confirmation
+          const redirectUrl = `${frontendUrl}/auth/callback`;
           
           console.log('Signup redirect URL:', redirectUrl);
           

@@ -8,6 +8,7 @@ import { Docs } from './pages/Docs';
 import { Portal } from './pages/Portal';
 import { Admin } from './pages/Admin';
 import { AdminStandalone } from './pages/AdminStandalone';
+import { AuthCallback } from './pages/AuthCallback';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
             <Route path="/app" element={<><Header /><Portal /></>} />
             <Route path="/admin" element={<><Header /><Admin /></>} />
             <Route path="/admin-only" element={<AdminStandalone />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
           </Routes>
         </div>
       </BrowserRouter>
