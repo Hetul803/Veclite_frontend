@@ -102,7 +102,9 @@ export async function login(email: string, password: string): Promise<User> {
     
     // If still not found, try to create it manually (fallback)
     if (!userData || userError) {
-      console.warn('User record not created by trigger, creating manually...');
+      console.warn('User record not created by trigger, attempting manual creation...');
+      console.warn('   User ID:', authData.user.id);
+      console.warn('   Email:', authData.user.email);
       
       // Generate API key
       const apiKey = `memryx_sk_${authData.user.id.substring(0, 24)}${Math.random().toString(36).substring(2, 12)}`;
@@ -119,14 +121,43 @@ export async function login(email: string, password: string): Promise<User> {
         .select()
         .single();
       
-      if (createError || !newUserData) {
-        console.error('Failed to create user record:', createError);
-        // Don't sign out - let them try again
-        throw new Error('User account setup incomplete. Please try signing in again in a few seconds.');
+      if (createError) {
+        console.error('Failed to create user record manually:', createError);
+        console.error('   Error code:', createError.code);
+        console.error('   Error message:', createError.message);
+        console.error('   Error details:', createError.details);
+        console.error('   Error hint:', createError.hint);
+        
+        // Check if it's a duplicate key error (user was created between retries)
+        if (createError.code === '23505' || createError.message?.includes('duplicate') || createError.message?.includes('unique')) {
+          console.log('User record exists now (created by trigger), fetching...');
+          // Try to fetch it one more time
+          const { data: finalData, error: finalError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', authData.user.id)
+            .single();
+          
+          if (finalData && !finalError) {
+            userData = finalData;
+            console.log('User record found after duplicate error');
+          } else {
+            throw new Error('User account exists but cannot be accessed. Please contact support.');
+          }
+        } else if (createError.message?.includes('permission') || createError.message?.includes('policy') || createError.code === '42501') {
+          // RLS policy issue - need to add INSERT policy
+          console.error('RLS policy issue - user cannot insert their own record');
+          throw new Error('Account setup requires database configuration. Please contact support or try again in a few moments.');
+        } else {
+          throw new Error(`Account setup failed: ${createError.message || 'Unknown error'}. Please try again or contact support.`);
+        }
+      } else if (!newUserData) {
+        console.error('User record creation returned no data');
+        throw new Error('Account setup incomplete. Please try signing in again in a few seconds.');
+      } else {
+        userData = newUserData;
+        console.log('✅ User record created manually successfully');
       }
-      
-      userData = newUserData;
-      console.log('User record created manually');
     }
   }
 
