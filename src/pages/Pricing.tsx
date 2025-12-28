@@ -201,27 +201,45 @@ export function Pricing() {
                       // For paid plans, redirect to Stripe checkout
                       try {
                         const apiUrl = import.meta.env.VITE_MCN_API_URL || 'http://localhost:8000';
+                        console.log('Creating Stripe checkout session...', { apiUrl, userId: user.id, plan: plan.name.toLowerCase() });
+                        
                         const response = await fetch(`${apiUrl}/api/stripe/create-checkout-session`, {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',
                           },
                           body: JSON.stringify({
-                            api_key: user.apiKey,
-                            plan: plan.name.toLowerCase(),
+                            planId: plan.name.toLowerCase(),
+                            userId: user.id,
                           }),
                         });
                         
+                        console.log('Stripe checkout response status:', response.status);
+                        
                         if (!response.ok) {
-                          const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                          const errorText = await response.text();
+                          console.error('Stripe checkout error response:', errorText);
+                          let errorData;
+                          try {
+                            errorData = JSON.parse(errorText);
+                          } catch {
+                            errorData = { detail: errorText || `HTTP ${response.status}: ${response.statusText}` };
+                          }
                           throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
                         }
                         
                         const data = await response.json();
+                        console.log('Stripe checkout response data:', data);
+                        
+                        // Backend returns sessionId, but we need the URL
+                        // If backend returns url, use it; otherwise construct from sessionId
                         if (data.url) {
                           window.location.href = data.url;
+                        } else if (data.sessionId) {
+                          // Backend should return URL, but if it only returns sessionId, we need to handle it
+                          throw new Error('Backend returned sessionId but not URL. Please check backend configuration.');
                         } else {
-                          throw new Error('No checkout URL returned from server');
+                          throw new Error('No checkout URL or sessionId returned from server');
                         }
                       } catch (error: any) {
                         console.error('Stripe checkout error:', error);
