@@ -123,7 +123,9 @@ export function Pricing() {
 
         <div className="max-w-7xl mx-auto mb-20">
           <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
-            {Object.values(PLAN_LIMITS).map((plan, i) => (
+            {Object.values(PLAN_LIMITS).map((plan, i) => {
+              const isCurrentPlan = user && user.plan === plan.name.toLowerCase();
+              return (
               <motion.div
                 key={plan.name}
                 initial={{ opacity: 0, y: 20 }}
@@ -132,14 +134,19 @@ export function Pricing() {
               >
                 <Card
                   hover
-                  glow={plan.name === 'Pro' || plan.name === 'Scale'}
+                  glow={plan.name === 'Pro' || plan.name === 'Scale' || isCurrentPlan}
                   className={`h-full flex flex-col ${
-                    (plan.name === 'Pro' || plan.name === 'Scale') ? 'border-cyan-500/50 relative' : ''
+                    (plan.name === 'Pro' || plan.name === 'Scale' || isCurrentPlan) ? 'border-cyan-500/50 relative' : ''
                   }`}
                 >
-                  {(plan.name === 'Pro' || plan.name === 'Scale') && (
+                  {(plan.name === 'Pro' || plan.name === 'Scale') && !isCurrentPlan && (
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                       <Badge variant="cyan">{plan.name === 'Pro' ? 'Popular' : 'Best Value'}</Badge>
+                    </div>
+                  )}
+                  {isCurrentPlan && (
+                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                      <Badge variant="cyan">Current Plan</Badge>
                     </div>
                   )}
 
