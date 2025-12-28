@@ -13,9 +13,10 @@ export function Header() {
 
   const navLinks = [
     { to: '/', label: 'Home' },
-    { to: '/why', label: 'Why Memryx' },
+    { to: '/why', label: 'Why Veclite' },
     { to: '/pricing', label: 'Pricing' },
-    { to: '/docs', label: 'Docs' }
+    { to: '/docs', label: 'Docs' },
+    { to: '/contact', label: 'Contact' }
   ];
 
   return (
@@ -32,7 +33,7 @@ export function Header() {
                 <Zap size={18} className="text-slate-950" />
               </motion.div>
               <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                Memryx
+                Veclite
               </span>
             </Link>
 

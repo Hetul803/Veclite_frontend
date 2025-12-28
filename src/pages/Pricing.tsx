@@ -29,7 +29,7 @@ export function Pricing() {
   ];
 
   const costComparisonData = [
-    { name: 'Memryx', monthly: COST_COMPARISON.monthly.mcn, storage: COST_COMPARISON.storage.mcn },
+    { name: 'Veclite', monthly: COST_COMPARISON.monthly.mcn, storage: COST_COMPARISON.storage.mcn },
     { name: 'Qdrant', monthly: COST_COMPARISON.monthly.qdrant, storage: COST_COMPARISON.storage.qdrant },
     { name: 'Weaviate', monthly: COST_COMPARISON.monthly.weaviate, storage: COST_COMPARISON.storage.weaviate },
     { name: 'Pinecone', monthly: COST_COMPARISON.monthly.pinecone, storage: COST_COMPARISON.storage.pinecone }
@@ -58,7 +58,7 @@ export function Pricing() {
           </Link>
         </motion.div>
 
-        {/* Why MCN is Cheaper Section */}
+        {/* Why Veclite is Cheaper Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -67,12 +67,12 @@ export function Pricing() {
         >
           <Card glow className="mb-12">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-slate-100 mb-4">Why Memryx is Cheaper</h2>
+              <h2 className="text-3xl font-bold text-slate-100 mb-4">Why Veclite is Cheaper</h2>
               <p className="text-slate-400 text-lg mb-6">
                 Traditional vector databases store every embedding individually.
               </p>
               <p className="text-xl text-cyan-400 font-semibold">
-                Memryx compresses embeddings into semantic clusters, reducing storage by 10–15× without accuracy loss.
+                Veclite compresses embeddings into semantic clusters, reducing storage by 10–15× without accuracy loss.
               </p>
             </div>
 
@@ -93,7 +93,7 @@ export function Pricing() {
                   </BarChart>
                 </ResponsiveContainer>
                 <p className="text-xs text-slate-500 mt-2 text-center">
-                  Memryx uses only 7.9% storage vs competitors (12.71x compression)
+                  Veclite uses only 7.9% storage vs competitors (12.71x compression)
                 </p>
               </div>
 
@@ -114,7 +114,7 @@ export function Pricing() {
                   </BarChart>
                 </ResponsiveContainer>
                 <p className="text-xs text-slate-500 mt-2 text-center">
-                  Memryx: $19/mo • Qdrant: ~$45/mo • Weaviate: ~$55/mo • Pinecone: ~$70/mo
+                  Veclite: $19/mo • Qdrant: ~$45/mo • Weaviate: ~$55/mo • Pinecone: ~$70/mo
                 </p>
               </div>
             </div>
@@ -199,9 +199,9 @@ export function Pricing() {
                       }
                       
                       // For paid plans, redirect to Stripe checkout
-                      // TODO: Integrate Stripe checkout session creation
                       try {
-                        const response = await fetch(`${import.meta.env.VITE_MCN_API_URL || 'http://localhost:8000'}/api/stripe/create-checkout-session`, {
+                        const apiUrl = import.meta.env.VITE_MCN_API_URL || 'http://localhost:8000';
+                        const response = await fetch(`${apiUrl}/api/stripe/create-checkout-session`, {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',
@@ -212,15 +212,21 @@ export function Pricing() {
                           }),
                         });
                         
-                        if (response.ok) {
-                          const { url } = await response.json();
-                          window.location.href = url;
-                        } else {
-                          throw new Error('Failed to create checkout session');
+                        if (!response.ok) {
+                          const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                          throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
                         }
-                      } catch (error) {
+                        
+                        const data = await response.json();
+                        if (data.url) {
+                          window.location.href = data.url;
+                        } else {
+                          throw new Error('No checkout URL returned from server');
+                        }
+                      } catch (error: any) {
                         console.error('Stripe checkout error:', error);
-                        alert('Payment integration is being set up. Please contact support to upgrade.');
+                        const errorMessage = error.message || 'Failed to create checkout session';
+                        alert(`Unable to start checkout: ${errorMessage}\n\nPlease contact support at patelhetul803@gmail.com if this persists.`);
                       }
                     }}
                   >
@@ -286,33 +292,6 @@ export function Pricing() {
                   ))}
                 </tbody>
               </table>
-            </div>
-          </Card>
-        </motion.section>
-
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-4xl mx-auto"
-        >
-          <Card>
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-slate-100 mb-4">Overage Policy</h2>
-              <p className="text-slate-400 mb-6 leading-relaxed">
-                If you exceed your plan limits, we'll notify you via email and your portal dashboard.
-                Free tier will be rate-limited. Pro tier overages are billed at $0.001 per 1K additional
-                queries or $50/month per additional 100K vectors. Enterprise plans have custom limits
-                with dedicated capacity.
-              </p>
-              <div className="inline-flex flex-col sm:flex-row gap-4">
-                <Link to="/docs">
-                  <Button variant="ghost">Read Documentation</Button>
-                </Link>
-                {!user && (
-                  <Button onClick={() => setIsLoginOpen(true)}>Get Started</Button>
-                )}
-              </div>
             </div>
           </Card>
         </motion.section>

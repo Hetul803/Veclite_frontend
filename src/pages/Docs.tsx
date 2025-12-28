@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { PLAN_LIMITS } from '../lib/config';
 
-const API_BASE_URL = import.meta.env.VITE_MCN_API_URL || 'https://api.memryx.com';
+const API_BASE_URL = import.meta.env.VITE_MCN_API_URL || 'https://api.veclite.com';
 
 export function Docs() {
   return (
@@ -20,7 +20,7 @@ export function Docs() {
           </Badge>
           <h1 className="text-5xl font-bold text-slate-100 mb-6">Getting Started</h1>
           <p className="text-xl text-slate-400">
-            Integrate Memryx into your application in minutes. Replace FAISS with 12.71x compression and exact recall.
+            Integrate Veclite into your application in minutes. Replace FAISS with 12.71x compression and exact recall.
           </p>
         </motion.div>
 
@@ -45,10 +45,10 @@ export function Docs() {
                   <div>
                     <h3 className="text-slate-100 font-semibold mb-3">1. Get Your API Key & Backend URL</h3>
                     <p className="text-slate-400 mb-3">
-                      Sign up at <a href="/app" className="text-cyan-400 hover:underline">memryx.com/app</a> and go to Portal → API Keys. Copy your API key (starts with <code className="text-cyan-400">memryx_sk_</code>).
+                      Sign up at <a href="/app" className="text-cyan-400 hover:underline">veclite.com/app</a> and go to Portal → API Keys. Copy your API key (starts with <code className="text-cyan-400">veclite_sk_</code>).
                     </p>
                     <p className="text-slate-400 mb-3 text-sm">
-                      <strong>Backend URL:</strong> Use your deployed Memryx backend URL (e.g., <code className="text-cyan-400">https://api.memryx.org</code> or your Railway URL). This is where your backend API is hosted, not the frontend website.
+                      <strong>Backend URL:</strong> Use your deployed Veclite backend URL (e.g., <code className="text-cyan-400">https://api.veclite.com</code> or your Railway URL). This is where your backend API is hosted, not the frontend website.
                     </p>
                   </div>
 
@@ -63,7 +63,7 @@ export function Docs() {
 Content-Type: application/json
 
 {
-  "api_key": "memryx_sk_YOUR_KEY_HERE",
+  "api_key": "veclite_sk_YOUR_KEY_HERE",
   "vectors": [
     {
       "id": "doc1",
@@ -90,7 +90,7 @@ Content-Type: application/json
 Content-Type: application/json
 
 {
-  "api_key": "memryx_sk_YOUR_KEY_HERE",
+  "api_key": "veclite_sk_YOUR_KEY_HERE",
   "timeout_s": 300.0
 }`}</code>
                       </pre>
@@ -108,7 +108,7 @@ Content-Type: application/json
 Content-Type: application/json
 
 {
-  "api_key": "memryx_sk_YOUR_KEY_HERE",
+  "api_key": "veclite_sk_YOUR_KEY_HERE",
   "vector": [0.1, 0.2, ..., 0.384],  // Query vector
   "k": 10  // Number of results
 }`}</code>
@@ -138,7 +138,7 @@ Content-Type: application/json
               <CardContent>
                 <div className="space-y-4">
                   <p className="text-slate-400">
-                    Complete example: Build a chatbot with RAG using Memryx instead of FAISS.
+                    Complete example: Build a chatbot with RAG using Veclite instead of FAISS.
                   </p>
                   <div className="bg-slate-950 rounded-lg p-4 border border-slate-800 overflow-x-auto">
                     <pre className="text-sm text-slate-300">
@@ -146,7 +146,7 @@ Content-Type: application/json
 from sentence_transformers import SentenceTransformer
 
 # Setup
-API_KEY = "memryx_sk_YOUR_KEY_HERE"
+API_KEY = "veclite_sk_YOUR_KEY_HERE"
 API_URL = "${API_BASE_URL}"
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 
@@ -226,17 +226,17 @@ context = "\\n".join([r["metadata"]["text"] for r in results["results"]])
                       <code>{`import { pipeline } from '@xenova/transformers';
 
 // Setup
-const API_KEY = "memryx_sk_YOUR_KEY_HERE"; // Get this from your Memryx Portal
-const API_URL = "${API_BASE_URL}"; // Your deployed Memryx backend URL (Railway)
+const API_KEY = "veclite_sk_YOUR_KEY_HERE"; // Get this from your Veclite Portal
+const API_URL = "${API_BASE_URL}"; // Your deployed Veclite backend URL (Railway)
 
 // Initialize embedding model
 const model = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 
 // 1. Add knowledge base
 const documents = [
-    "Memryx is a compressed memory engine for AI.",
+    "Veclite is a compressed memory engine for AI.",
     "It delivers exact recall at a fraction of vector DB cost.",
-    "Memryx uses a unique cluster-based compression approach.",
+    "Veclite uses a unique cluster-based compression approach.",
     "It achieves 12.71x compression without accuracy loss.",
     "Traditional vector databases store every embedding individually."
 ];
@@ -296,7 +296,7 @@ while (true) {
 }
 
 // 3. Search (for RAG)
-const query = "How does Memryx save cost?";
+const query = "How does Veclite save cost?";
 const queryEmbedding = await model(query, { pooling: 'mean', normalize: true });
 const queryVector = Array.from(queryEmbedding.data);
 
@@ -359,7 +359,7 @@ console.log("-------------------------");
                       <code>{`import { pipeline } from '@xenova/transformers';
 
 // Setup
-const API_KEY = "memryx_sk_YOUR_KEY_HERE"; // Get from Memryx Portal
+const API_KEY = "veclite_sk_YOUR_KEY_HERE"; // Get from Veclite Portal
 const API_URL = "${API_BASE_URL}"; // Your Railway backend URL
 
 // Initialize embedding model
@@ -367,7 +367,7 @@ const model = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
 
 // 1. Add knowledge base
 const documents = [
-    "Memryx is a compressed memory engine for AI.",
+    "Veclite is a compressed memory engine for AI.",
     "It delivers exact recall at a fraction of vector DB cost."
 ];
 
@@ -402,7 +402,7 @@ while (true) {
 }
 
 // 3. Search
-const queryEmbedding = await model("How does Memryx save cost?", { pooling: 'mean', normalize: true });
+const queryEmbedding = await model("How does Veclite save cost?", { pooling: 'mean', normalize: true });
 const searchResults = await (await fetch(\`\${API_URL}/search\`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -451,7 +451,7 @@ const context = searchResults.results.map(r => r.metadata.text).join("\\n");`}</
                     <div className="bg-slate-950 rounded-lg p-4 border border-slate-800 overflow-x-auto">
                       <pre className="text-sm text-slate-300">
                         <code>{JSON.stringify({
-                          api_key: "memryx_sk_...",
+                          api_key: "veclite_sk_...",
                           vectors: [
                             { id: "vec1", values: [0.1, 0.2], metadata: {} }
                           ]
@@ -469,7 +469,7 @@ const context = searchResults.results.map(r => r.metadata.text).join("\\n");`}</
                     <div className="bg-slate-950 rounded-lg p-4 border border-slate-800 overflow-x-auto">
                       <pre className="text-sm text-slate-300">
                         <code>{JSON.stringify({
-                          api_key: "memryx_sk_...",
+                          api_key: "veclite_sk_...",
                           vector: [0.1, 0.2],
                           k: 10
                         }, null, 2)}</code>
@@ -486,7 +486,7 @@ const context = searchResults.results.map(r => r.metadata.text).join("\\n");`}</
                     <div className="bg-slate-950 rounded-lg p-4 border border-slate-800 overflow-x-auto">
                       <pre className="text-sm text-slate-300">
                         <code>{JSON.stringify({
-                          api_key: "memryx_sk_...",
+                          api_key: "veclite_sk_...",
                           timeout_s: 300.0
                         }, null, 2)}</code>
                       </pre>
@@ -591,11 +591,11 @@ const context = searchResults.results.map(r => r.metadata.text).join("\\n");`}</
                     <ul className="text-slate-400 space-y-2 mb-2">
                       <li className="flex items-start gap-2">
                         <span className="text-cyan-400 mt-1">•</span>
-                        <span><strong>Base URL:</strong> Your Memryx backend URL (e.g., <code className="text-cyan-400">https://api.memryx.org</code> or your Railway URL). This is where your backend API is deployed.</span>
+                        <span><strong>Base URL:</strong> Your Veclite backend URL (e.g., <code className="text-cyan-400">https://api.veclite.com</code> or your Railway URL). This is where your backend API is deployed.</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-cyan-400 mt-1">•</span>
-                        <span><strong>API Key:</strong> Your authentication key (starts with <code className="text-cyan-400">memryx_sk_</code>). Get this from your Portal after signing up.</span>
+                        <span><strong>API Key:</strong> Your authentication key (starts with <code className="text-cyan-400">veclite_sk_</code>). Get this from your Portal after signing up.</span>
                       </li>
                     </ul>
                     <p className="text-slate-400 text-sm">
@@ -615,7 +615,7 @@ const context = searchResults.results.map(r => r.metadata.text).join("\\n");`}</
                     </p>
                   </div>
                   <div>
-                    <h3 className="text-slate-100 font-semibold mb-2">How do I replace FAISS with Memryx?</h3>
+                    <h3 className="text-slate-100 font-semibold mb-2">How do I replace FAISS with Veclite?</h3>
                     <p className="text-slate-400">
                       Instead of <code className="text-cyan-400">index.add(vectors)</code> and <code className="text-cyan-400">index.search(query)</code>, use <code className="text-cyan-400">POST /add</code> and <code className="text-cyan-400">POST /search</code> with your API key. Same exact recall, 12.71x compression.
                     </p>

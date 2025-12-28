@@ -1,5 +1,5 @@
-// MCN Backend API Client
-// This connects to the MCN backend server
+// Veclite Backend API Client
+// This connects to the Veclite backend server
 
 const MCN_API_URL = import.meta.env.VITE_MCN_API_URL || 'http://localhost:8000';
 

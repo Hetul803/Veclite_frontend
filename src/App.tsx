@@ -9,6 +9,7 @@ import { Portal } from './pages/Portal';
 import { Admin } from './pages/Admin';
 import { AdminStandalone } from './pages/AdminStandalone';
 import { AuthCallback } from './pages/AuthCallback';
+import { Contact } from './pages/Contact';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="/why" element={<><Header /><Why /></>} />
             <Route path="/pricing" element={<><Header /><Pricing /></>} />
             <Route path="/docs" element={<><Header /><Docs /></>} />
+            <Route path="/contact" element={<><Header /><Contact /></>} />
             <Route path="/app" element={<><Header /><Portal /></>} />
             <Route path="/admin" element={<><Header /><Admin /></>} />
             <Route path="/admin-only" element={<AdminStandalone />} />

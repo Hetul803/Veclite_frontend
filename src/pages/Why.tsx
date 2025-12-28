@@ -15,7 +15,7 @@ export function Why() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-4xl mx-auto mb-16 text-center"
         >
-          <h1 className="text-5xl font-bold text-slate-100 mb-6">Why Memryx?</h1>
+          <h1 className="text-5xl font-bold text-slate-100 mb-6">Why Veclite?</h1>
           <p className="text-xl text-slate-400">
             A technical deep-dive into our approach to vector memory
           </p>
@@ -41,7 +41,7 @@ export function Why() {
                     However, it stores every vector in full and does not optimize for storage cost.
                   </p>
                   <p className="text-slate-300 leading-relaxed mb-4">
-                    Memryx targets a different problem:
+                    Veclite targets a different problem:
                   </p>
                   <ul className="space-y-2 text-slate-300 mb-6">
                     <li className="flex items-start gap-2">
@@ -76,7 +76,7 @@ export function Why() {
                     significant storage and memory overhead.
                   </p>
                   <p className="text-slate-300 leading-relaxed mb-4">
-                    Memryx achieves <span className="text-cyan-400 font-semibold">12.71x compression</span> (92.1% storage savings) by
+                    Veclite achieves <span className="text-cyan-400 font-semibold">12.71x compression</span> (92.1% storage savings) by
                     building semantic clusters and representing them as "super vectors". Your original vectors
                     are compressed into cluster memberships plus lightweight metadata. This means:
                   </p>
@@ -117,7 +117,7 @@ export function Why() {
                     this is unacceptable.
                   </p>
                   <p className="text-slate-300 leading-relaxed mb-4">
-                    Memryx takes a different approach: <span className="text-cyan-400 font-semibold">route then rerank</span>.
+                    Veclite takes a different approach: <span className="text-cyan-400 font-semibold">route then rerank</span>.
                     We use fast cluster routing to narrow down to relevant super vectors, then perform exact search
                     within those clusters. This gives you:
                   </p>
@@ -153,7 +153,7 @@ export function Why() {
                 <div>
                   <h2 className="text-3xl font-bold text-slate-100 mb-4">Scaling Behavior</h2>
                   <p className="text-slate-300 leading-relaxed mb-4">
-                    One of Memryx's key advantages is predictable scaling behavior. As your vector count grows,
+                    One of Veclite's key advantages is predictable scaling behavior. As your vector count grows,
                     our performance characteristics remain stable:
                   </p>
                   <ul className="space-y-2 text-slate-300 mb-4">
@@ -191,7 +191,7 @@ export function Why() {
                 <div>
                   <h2 className="text-3xl font-bold text-slate-100 mb-4">Who It's For</h2>
                   <p className="text-slate-300 leading-relaxed mb-4">
-                    Memryx is ideal for teams who need:
+                    Veclite is ideal for teams who need:
                   </p>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="bg-slate-800/30 rounded-lg p-4">
@@ -231,7 +231,7 @@ export function Why() {
           >
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-slate-100 mb-4">How Routing Works</h2>
-              <p className="text-slate-400">The technical flow behind Memryx queries</p>
+              <p className="text-slate-400">The technical flow behind Veclite queries</p>
             </div>
 
             <Card glow>
@@ -279,7 +279,7 @@ export function Why() {
           >
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-slate-100 mb-4">Frequently Asked Questions</h2>
-              <p className="text-slate-400">Common questions about Memryx</p>
+              <p className="text-slate-400">Common questions about Veclite</p>
             </div>
 
             <div className="space-y-4">

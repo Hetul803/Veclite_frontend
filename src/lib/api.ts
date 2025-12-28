@@ -133,7 +133,7 @@ export async function login(email: string, password: string): Promise<User> {
       
       // Create user record immediately (no more waiting)
       console.log('   User still not found, creating manually...');
-      const apiKey = `memryx_sk_${authData.user.id.substring(0, 24)}${Math.random().toString(36).substring(2, 12)}`;
+      const apiKey = `veclite_sk_${authData.user.id.substring(0, 24)}${Math.random().toString(36).substring(2, 12)}`;
       
       console.log('   Inserting user record...');
       const { data: newUserData, error: createError } = await supabase
@@ -724,7 +724,7 @@ export async function regenerateApiKey(userId: string): Promise<void> {
   }
 
   // Generate new API key
-  const newApiKey = `memryx_sk_${crypto.randomUUID().replace(/-/g, '')}${Math.random().toString(36).substring(2, 12)}`;
+  const newApiKey = `veclite_sk_${crypto.randomUUID().replace(/-/g, '')}${Math.random().toString(36).substring(2, 12)}`;
 
   const { error } = await supabase
     .from('users')

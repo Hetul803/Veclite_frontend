@@ -153,23 +153,23 @@ export const PLAN_LIMITS = {
 export const FAQ_ITEMS = [
   {
     question: 'How is this different from Qdrant or Pinecone?',
-    answer: 'Memryx uses a unique cluster-based compression approach that maintains perfect recall parity with FAISS exact search (39.34% Recall@10 on MS MARCO 100K) while achieving 12.71x compression. Unlike traditional ANN systems (HNSW, Qdrant) that trade recall for speed (typically achieving ~36% recall with 20-50ms latency), Memryx provides exact recall (39.34%) with competitive latency (33.69ms p95) and 12.71x compression. We route queries to relevant clusters then perform exact reranking within those clusters, giving you the best of all worlds: exact recall + compression + competitive latency.'
+    answer: 'Veclite uses a unique cluster-based compression approach that maintains perfect recall parity with FAISS exact search (39.34% Recall@10 on MS MARCO 100K) while achieving 12.71x compression. Unlike traditional ANN systems (HNSW, Qdrant) that trade recall for speed (typically achieving ~36% recall with 20-50ms latency), Veclite provides exact recall (39.34%) with competitive latency (33.69ms p95) and 12.71x compression. We route queries to relevant clusters then perform exact reranking within those clusters, giving you the best of all worlds: exact recall + compression + competitive latency.'
   },
   {
     question: 'Do you use FAISS or HNSW under the hood?',
-    answer: 'No. Memryx uses a proprietary routing and clustering algorithm. We build "super vectors" that represent clusters of similar vectors, route queries efficiently, then perform exact search within relevant clusters. This gives us 12.71x compression benefits without the recall degradation of traditional ANN methods. Our tests show perfect recall parity with FAISS IndexFlatIP exact search.'
+    answer: 'No. Veclite uses a proprietary routing and clustering algorithm. We build "super vectors" that represent clusters of similar vectors, route queries efficiently, then perform exact search within relevant clusters. This gives us 12.71x compression benefits without the recall degradation of traditional ANN methods. Our tests show perfect recall parity with FAISS IndexFlatIP exact search.'
   },
   {
     question: 'What about forever memory or infinite context?',
-    answer: 'Memryx is designed for production vector search at scale with predictable costs and performance. We compress vectors significantly (7.66x to 12.71x in real tests), achieving 87-92% storage savings while maintaining exact recall parity. Our focus is on practical workloads where recall and latency guarantees matter more than theoretical limits.'
+    answer: 'Veclite is designed for production vector search at scale with predictable costs and performance. We compress vectors significantly (7.66x to 12.71x in real tests), achieving 87-92% storage savings while maintaining exact recall parity. Our focus is on practical workloads where recall and latency guarantees matter more than theoretical limits.'
   },
   {
     question: "What's the tradeoff?",
-    answer: 'The main tradeoff is build time. Creating the cluster structure takes 2-3 minutes for 100K vectors (137.48s in production tests) compared to FAISS which builds in 0.18s. However, once built, queries are fast and consistent (33.69ms p95 at 100K scale - competitive with ANN systems like HNSW and Qdrant which typically achieve 20-50ms). This makes Memryx ideal for scenarios where you can batch vector ingestion and tolerate occasional rebuild windows.'
+    answer: 'The main tradeoff is build time. Creating the cluster structure takes 2-3 minutes for 100K vectors (137.48s in production tests) compared to FAISS which builds in 0.18s. However, once built, queries are fast and consistent (33.69ms p95 at 100K scale - competitive with ANN systems like HNSW and Qdrant which typically achieve 20-50ms). This makes Veclite ideal for scenarios where you can batch vector ingestion and tolerate occasional rebuild windows.'
   },
   {
     question: 'Can I update vectors in real-time?',
-    answer: 'Memryx supports online mutation with minimal impact. Our tests show that concurrent ingestion and compression results in <1% recall drop and <1% latency increase. You can upload vectors continuously, and they become searchable after a finalize operation (avg 260.94s for 10K vector waves). This architecture enables our compression and performance guarantees.'
+    answer: 'Veclite supports online mutation with minimal impact. Our tests show that concurrent ingestion and compression results in <1% recall drop and <1% latency increase. You can upload vectors continuously, and they become searchable after a finalize operation (avg 260.94s for 10K vector waves). This architecture enables our compression and performance guarantees.'
   }
 ];
 
@@ -199,7 +199,7 @@ export const COST_COMPARISON = {
 };
 
 // Real API endpoints matching server_v2.py
-const API_BASE = import.meta.env.VITE_MCN_API_URL || 'https://api.memryx.com';
+const API_BASE = import.meta.env.VITE_MCN_API_URL || 'https://api.veclite.com';
 
 export const API_ENDPOINTS = [
   {
@@ -207,7 +207,7 @@ export const API_ENDPOINTS = [
     path: `${API_BASE}/add`,
     description: 'Upload vectors to your index',
     body: {
-      api_key: 'memryx_sk_YOUR_KEY',
+      api_key: 'veclite_sk_YOUR_KEY',
       vectors: [
         { id: 'vec1', values: [0.1, 0.2], metadata: {} }
       ]
@@ -218,7 +218,7 @@ export const API_ENDPOINTS = [
     path: `${API_BASE}/search`,
     description: 'Search for similar vectors',
     body: {
-      api_key: 'memryx_sk_YOUR_KEY',
+      api_key: 'veclite_sk_YOUR_KEY',
       vector: [0.1, 0.2],
       k: 10
     }
@@ -228,7 +228,7 @@ export const API_ENDPOINTS = [
     path: `${API_BASE}/finalize`,
     description: 'Build cluster structure (non-blocking, returns build_id)',
     body: {
-      api_key: 'memryx_sk_YOUR_KEY',
+      api_key: 'veclite_sk_YOUR_KEY',
       timeout_s: 300.0
     }
   },

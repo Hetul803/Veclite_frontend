@@ -34,7 +34,7 @@ export function Home() {
 
   // Comparison data for MS MARCO 100K test
   const comparisonData = [
-    { name: 'Memryx', recall: 39.34, latency: 33.69, compression: 12.71, storageCost: 7.9 },
+    { name: 'Veclite', recall: 39.34, latency: 33.69, compression: 12.71, storageCost: 7.9 },
     { name: 'FAISS Exact', recall: 39.34, latency: 3.16, compression: 1.00, storageCost: 100 },
     { name: 'ANN/HNSW*', recall: 36.0, latency: 35.0, compression: 1.00, storageCost: 100 }
   ];
@@ -52,7 +52,7 @@ export function Home() {
   }));
 
   const costComparisonData = [
-    { name: 'Memryx', monthly: COST_COMPARISON.monthly.mcn, storage: COST_COMPARISON.storage.mcn },
+    { name: 'Veclite', monthly: COST_COMPARISON.monthly.mcn, storage: COST_COMPARISON.storage.mcn },
     { name: 'Qdrant', monthly: COST_COMPARISON.monthly.qdrant, storage: COST_COMPARISON.storage.qdrant },
     { name: 'Weaviate', monthly: COST_COMPARISON.monthly.weaviate, storage: COST_COMPARISON.storage.weaviate },
     { name: 'Pinecone', monthly: COST_COMPARISON.monthly.pinecone, storage: COST_COMPARISON.storage.pinecone }
@@ -72,15 +72,15 @@ export function Home() {
             className="text-center max-w-4xl mx-auto"
           >
             <Badge variant="cyan" className="mb-6">
-              Vector Database designed for long-term AI memory.
+              Veclite DB is designed for long-term AI memory.
             </Badge>
 
             <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-500 bg-clip-text text-transparent leading-tight">
-              Memryx
+              Veclite
             </h1>
 
             <p className="text-xl md:text-2xl text-slate-400 mb-12 leading-relaxed">
-              Memryx is a compressed memory engine that delivers exact recall at a fraction of vector DB cost for large-scale AI systems.
+              Veclite is a compressed memory engine that delivers exact recall at a fraction of vector DB cost for large-scale AI systems.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -128,7 +128,7 @@ export function Home() {
               {
                 icon: Zap,
                 title: 'Build Clusters',
-                description: 'Memryx creates super-vectors representing semantic clusters. 12.71x compression achieved (92.1% storage savings).',
+                description: 'Veclite creates super-vectors representing semantic clusters. 12.71x compression achieved (92.1% storage savings).',
                 step: '02'
               },
               {
@@ -171,7 +171,7 @@ export function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl font-bold text-slate-100 mb-4">Why Memryx</h2>
+            <h2 className="text-4xl font-bold text-slate-100 mb-4">Why Veclite</h2>
             <p className="text-slate-400 text-lg">Predictable performance at scale</p>
           </motion.div>
 
@@ -248,7 +248,7 @@ export function Home() {
                     </BarChart>
                   </ResponsiveContainer>
                   <p className="text-xs text-slate-500 mt-2 text-center">
-                    Memryx = FAISS Exact (39.34% vs 39.34%) • Better than ANN systems (~35-37%)
+                    Veclite = FAISS Exact (39.34% vs 39.34%) • Better than ANN systems (~35-37%)
                   </p>
                 </CardContent>
               </Card>
@@ -271,7 +271,7 @@ export function Home() {
                     </BarChart>
                   </ResponsiveContainer>
                   <p className="text-xs text-slate-500 mt-2 text-center">
-                    Memryx (33.69ms) competitive with ANN systems • FAISS Exact faster but no compression
+                    Veclite (33.69ms) competitive with ANN systems • FAISS Exact faster but no compression
                   </p>
                 </CardContent>
               </Card>
@@ -296,7 +296,7 @@ export function Home() {
                     </BarChart>
                   </ResponsiveContainer>
                   <p className="text-xs text-slate-500 mt-2 text-center">
-                    Memryx achieves 12.71x compression (92.1% storage savings) • Others: 1.00x
+                    Veclite achieves 12.71x compression (92.1% storage savings) • Others: 1.00x
                   </p>
                 </CardContent>
               </Card>
@@ -319,7 +319,7 @@ export function Home() {
                     </BarChart>
                   </ResponsiveContainer>
                   <p className="text-xs text-slate-500 mt-2 text-center">
-                    Memryx uses only 7.9% storage vs competitors (12.7x cost savings)
+                    Veclite uses only 7.9% storage vs competitors (12.7x cost savings)
                   </p>
                 </CardContent>
               </Card>
@@ -327,7 +327,7 @@ export function Home() {
 
             <Card glow>
               <CardHeader>
-                <CardTitle>Memryx vs Competitors (MS MARCO 100K)</CardTitle>
+                <CardTitle>Veclite vs Competitors (MS MARCO 100K)</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
@@ -335,7 +335,7 @@ export function Home() {
                     <thead>
                       <tr className="border-b border-slate-800">
                         <th className="text-left py-3 px-4 text-slate-300 font-semibold">Metric</th>
-                        <th className="text-right py-3 px-4 text-cyan-400 font-semibold">Memryx</th>
+                        <th className="text-right py-3 px-4 text-cyan-400 font-semibold">Veclite</th>
                         <th className="text-right py-3 px-4 text-slate-400 font-semibold">FAISS Exact</th>
                         <th className="text-right py-3 px-4 text-slate-400 font-semibold">ANN/HNSW*</th>
                         <th className="text-right py-3 px-4 text-emerald-400 font-semibold">Winner</th>
@@ -347,52 +347,52 @@ export function Home() {
                         <td className="py-3 px-4 text-right text-cyan-400 font-mono">39.34%</td>
                         <td className="py-3 px-4 text-right text-slate-300 font-mono">39.34%</td>
                         <td className="py-3 px-4 text-right text-slate-500 font-mono">~35-37%</td>
-                        <td className="py-3 px-4 text-right text-emerald-400">Memryx = FAISS Exact ✅</td>
+                        <td className="py-3 px-4 text-right text-emerald-400">Veclite = FAISS Exact ✅</td>
                       </tr>
                       <tr className="border-b border-slate-800/50 hover:bg-slate-800/30">
                         <td className="py-3 px-4 text-slate-300">nDCG@10</td>
                         <td className="py-3 px-4 text-right text-cyan-400 font-mono">0.3942</td>
                         <td className="py-3 px-4 text-right text-slate-300 font-mono">0.3942</td>
                         <td className="py-3 px-4 text-right text-slate-500 font-mono">~0.35-0.37</td>
-                        <td className="py-3 px-4 text-right text-emerald-400">Memryx = FAISS Exact ✅</td>
+                        <td className="py-3 px-4 text-right text-emerald-400">Veclite = FAISS Exact ✅</td>
                       </tr>
                       <tr className="border-b border-slate-800/50 hover:bg-slate-800/30">
                         <td className="py-3 px-4 text-slate-300">MRR@10</td>
                         <td className="py-3 px-4 text-right text-cyan-400 font-mono">0.4940</td>
                         <td className="py-3 px-4 text-right text-slate-300 font-mono">0.4940</td>
                         <td className="py-3 px-4 text-right text-slate-500 font-mono">~0.45-0.47</td>
-                        <td className="py-3 px-4 text-right text-emerald-400">Memryx = FAISS Exact ✅</td>
+                        <td className="py-3 px-4 text-right text-emerald-400">Veclite = FAISS Exact ✅</td>
                       </tr>
                       <tr className="border-b border-slate-800/50 hover:bg-slate-800/30">
                         <td className="py-3 px-4 text-slate-300">p95 Latency</td>
                         <td className="py-3 px-4 text-right text-cyan-400 font-mono">33.69ms</td>
                         <td className="py-3 px-4 text-right text-slate-300 font-mono">3.16ms</td>
                         <td className="py-3 px-4 text-right text-slate-500 font-mono">~20-50ms</td>
-                        <td className="py-3 px-4 text-right text-emerald-400">Memryx = ANN ✅</td>
+                        <td className="py-3 px-4 text-right text-emerald-400">Veclite = ANN ✅</td>
                       </tr>
                       <tr className="border-b border-slate-800/50 hover:bg-slate-800/30">
                         <td className="py-3 px-4 text-slate-300">Compression</td>
                         <td className="py-3 px-4 text-right text-cyan-400 font-mono">12.71:1</td>
                         <td className="py-3 px-4 text-right text-slate-300 font-mono">1.00:1</td>
                         <td className="py-3 px-4 text-right text-slate-500 font-mono">1.00:1</td>
-                        <td className="py-3 px-4 text-right text-emerald-400">Memryx 🏆 (92.1% savings)</td>
+                        <td className="py-3 px-4 text-right text-emerald-400">Veclite 🏆 (92.1% savings)</td>
                       </tr>
                       <tr className="border-b border-slate-800/50 hover:bg-slate-800/30">
                         <td className="py-3 px-4 text-slate-300">Storage Cost</td>
                         <td className="py-3 px-4 text-right text-cyan-400 font-mono">7.9%</td>
                         <td className="py-3 px-4 text-right text-slate-300 font-mono">100%</td>
                         <td className="py-3 px-4 text-right text-slate-500 font-mono">100%</td>
-                        <td className="py-3 px-4 text-right text-emerald-400">Memryx 🏆 (12.7x cheaper)</td>
+                        <td className="py-3 px-4 text-right text-emerald-400">Veclite 🏆 (12.7x cheaper)</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
                 <div className="mt-6 p-4 bg-slate-800/30 rounded-lg">
                   <p className="text-sm text-slate-400 mb-2">
-                    <span className="text-cyan-400 font-semibold">Key Insight:</span> Memryx achieves <span className="text-emerald-400">perfect recall parity</span> with FAISS exact search (39.34% vs 39.34%) while providing <span className="text-emerald-400">12.71x compression</span> (92.1% storage savings).
+                    <span className="text-cyan-400 font-semibold">Key Insight:</span> Veclite achieves <span className="text-emerald-400">perfect recall parity</span> with FAISS exact search (39.34% vs 39.34%) while providing <span className="text-emerald-400">12.71x compression</span> (92.1% storage savings).
                   </p>
                   <p className="text-sm text-slate-400">
-                    <span className="text-cyan-400 font-semibold">Latency Context:</span> Memryx's 33.69ms p95 latency is <span className="text-emerald-400">competitive with ANN systems</span> (HNSW, Qdrant) which typically achieve 20-50ms, while FAISS IndexFlatIP's 3.16ms comes from exact brute-force search with no compression. Memryx offers the best balance: <span className="text-emerald-400">exact recall + compression + competitive latency</span>.
+                    <span className="text-cyan-400 font-semibold">Latency Context:</span> Veclite's 33.69ms p95 latency is <span className="text-emerald-400">competitive with ANN systems</span> (HNSW, Qdrant) which typically achieve 20-50ms, while FAISS IndexFlatIP's 3.16ms comes from exact brute-force search with no compression. Veclite offers the best balance: <span className="text-emerald-400">exact recall + compression + competitive latency</span>.
                   </p>
                   <p className="text-xs text-slate-500 mt-2">
                     *ANN/HNSW estimates based on industry benchmarks. FAISS IndexFlatIP uses exact search (no approximation).
@@ -463,12 +463,12 @@ export function Home() {
           >
             <Card glow className="mb-12">
               <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-slate-100 mb-4">Why Memryx is Cheaper</h2>
+              <h2 className="text-3xl font-bold text-slate-100 mb-4">Why Veclite is Cheaper</h2>
               <p className="text-slate-400 text-lg mb-4">
                 Traditional vector databases store every embedding individually.
               </p>
               <p className="text-xl text-cyan-400 font-semibold">
-                Memryx compresses embeddings into semantic clusters, reducing storage by 10–15× without accuracy loss.
+                Veclite compresses embeddings into semantic clusters, reducing storage by 10–15× without accuracy loss.
               </p>
               </div>
 
@@ -489,7 +489,7 @@ export function Home() {
                     </BarChart>
                   </ResponsiveContainer>
                   <p className="text-xs text-slate-500 mt-2 text-center">
-                    Memryx uses only 7.9% storage vs competitors (12.71x compression)
+                    Veclite uses only 7.9% storage vs competitors (12.71x compression)
                   </p>
                 </div>
 
@@ -510,7 +510,7 @@ export function Home() {
                     </BarChart>
                   </ResponsiveContainer>
                   <p className="text-xs text-slate-500 mt-2 text-center">
-                    Memryx: $19/mo • Qdrant: ~$45/mo • Weaviate: ~$55/mo • Pinecone: ~$70/mo
+                    Veclite: $19/mo • Qdrant: ~$45/mo • Weaviate: ~$55/mo • Pinecone: ~$70/mo
                   </p>
                 </div>
               </div>
@@ -613,7 +613,7 @@ export function Home() {
             </div>
           </div>
           <div className="pt-8 border-t border-slate-800 text-center text-slate-500 text-sm">
-            © 2025 Memryx. All rights reserved.
+            © 2025 Veclite. All rights reserved.
           </div>
         </div>
       </footer>
