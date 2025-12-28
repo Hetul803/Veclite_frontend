@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, Database, Key, Settings, LayoutDashboard, Plus, Play, Upload, Loader2, Eye, EyeOff, Copy, RefreshCw, AlertTriangle } from 'lucide-react';
+import { BarChart3, Database, Key, Settings, LayoutDashboard, Plus, Play, Upload, Loader2, Eye, EyeOff, Copy, RefreshCw, AlertTriangle, Trash2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
@@ -10,7 +10,7 @@ import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
 import { useAuth } from '../lib/auth-context';
 import { LoginModal } from '../components/LoginModal';
-import { getStats, getUsage, listIndexes, createIndex, finalizeIndex, regenerateApiKey, Index, UsageData } from '../lib/api';
+import { getStats, getUsage, listIndexes, createIndex, finalizeIndex, regenerateApiKey, deleteIndex, Index, UsageData } from '../lib/api';
 import { PLAN_LIMITS } from '../lib/config';
 
 type TabType = 'overview' | 'indexes' | 'usage' | 'keys' | 'settings';
@@ -32,8 +32,9 @@ export function Portal() {
   const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
 
   const [newIndexName, setNewIndexName] = useState('');
-  const [newIndexDim, setNewIndexDim] = useState('384');
   const [newIndexDesc, setNewIndexDesc] = useState('');
+  const [orgName, setOrgName] = useState('My Organization');
+  const [isSavingOrg, setIsSavingOrg] = useState(false);
 
   useEffect(() => {
     // Check if user is authenticated (even if user data not loaded yet)
@@ -91,14 +92,41 @@ export function Portal() {
   };
 
   const handleCreateIndex = async () => {
-    if (!user || !newIndexName || !newIndexDim) return;
+    if (!user || !newIndexName) return;
 
-    await createIndex(user.id, newIndexName, parseInt(newIndexDim), newIndexDesc);
+    // Fixed dimension: 384 (sentence-transformers/all-MiniLM-L6-v2)
+    await createIndex(user.id, newIndexName, 384, newIndexDesc);
     setIsCreateIndexOpen(false);
     setNewIndexName('');
-    setNewIndexDim('384');
     setNewIndexDesc('');
     loadData();
+  };
+
+  const handleDeleteIndex = async (indexId: string) => {
+    if (!user || !confirm('Are you sure you want to delete this index? All vectors in this index will be permanently deleted.')) return;
+    
+    try {
+      await deleteIndex(user.id, indexId);
+      loadData();
+    } catch (error) {
+      console.error('Failed to delete index:', error);
+      alert('Failed to delete index. Please try again.');
+    }
+  };
+
+  const handleSaveOrgName = async () => {
+    if (!user) return;
+    setIsSavingOrg(true);
+    try {
+      // TODO: Add API endpoint to save organization name
+      // For now, just show success message
+      alert('Organization name saved! (Note: This feature will be fully implemented with backend support)');
+    } catch (error) {
+      console.error('Failed to save organization name:', error);
+      alert('Failed to save. Please try again.');
+    } finally {
+      setIsSavingOrg(false);
+    }
   };
 
   const handleFinalizeIndex = async (indexId: string) => {
@@ -295,10 +323,15 @@ export function Portal() {
             {activeTab === 'indexes' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-3xl font-bold text-slate-100 mb-2">Indexes</h1>
-                    <p className="text-slate-400">Manage your vector indexes</p>
+                <div>
+                  <h1 className="text-3xl font-bold text-slate-100 mb-2">Indexes</h1>
+                  <p className="text-slate-400">Manage your vector indexes</p>
+                  <div className="mt-4 bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
+                    <p className="text-sm text-cyan-400/80">
+                      <strong>What is an Index?</strong> An index is a separate collection of vectors. You can create multiple indexes to organize different datasets (e.g., "product-search", "document-qa", "user-preferences"). Each index is isolated and can be finalized independently. All indexes share your plan limits (total vectors, QPS, etc.).
+                    </p>
                   </div>
+                </div>
                   <Button onClick={() => setIsCreateIndexOpen(true)}>
                     <Plus size={20} className="mr-2" />
                     Create Index
@@ -372,6 +405,7 @@ export function Portal() {
                               variant="ghost"
                               size="sm"
                               disabled={index.status === 'building'}
+                              title="Upload vectors to this index"
                             >
                               <Upload size={16} />
                             </Button>
@@ -380,12 +414,23 @@ export function Portal() {
                               size="sm"
                               onClick={() => handleFinalizeIndex(index.id)}
                               disabled={index.status === 'building' || isFinalizingIndex === index.id}
+                              title="Finalize index: Build compressed clusters for faster search"
                             >
                               {isFinalizingIndex === index.id ? (
                                 <Loader2 size={16} className="animate-spin" />
                               ) : (
                                 <Play size={16} />
                               )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteIndex(index.id)}
+                              disabled={index.status === 'building'}
+                              title="Delete index (permanent)"
+                              className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                            >
+                              <Trash2 size={16} />
                             </Button>
                           </div>
                         </div>
@@ -618,8 +663,15 @@ export function Portal() {
                       try {
                         await regenerateApiKey(user.id);
                         setShowRegenerateConfirm(false);
-                        // Reload user data to get new key
-                        window.location.reload();
+                        // Reload user data instead of entire page
+                        const { getCurrentUserFromDB } = await import('../lib/api');
+                        const updatedUser = await getCurrentUserFromDB();
+                        if (updatedUser) {
+                          // Update user in auth context
+                          const { useAuth } = await import('../lib/auth-context');
+                          // Force reload by updating user state
+                          window.location.reload(); // Temporary: reload until we have proper context update
+                        }
                       } catch (error) {
                         console.error('Failed to regenerate key:', error);
                         alert('Failed to regenerate key. Please try again.');
@@ -656,9 +708,19 @@ export function Portal() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <Input label="Organization Name" defaultValue="My Organization" />
-                      <Input label="Billing Email" defaultValue={user.email} type="email" />
-                      <Button variant="secondary">Save Changes</Button>
+                      <Input 
+                        label="Organization Name" 
+                        value={orgName}
+                        onChange={(e) => setOrgName(e.target.value)}
+                      />
+                      <Input label="Billing Email" defaultValue={user.email} type="email" disabled />
+                      <Button 
+                        variant="secondary" 
+                        onClick={handleSaveOrgName}
+                        disabled={isSavingOrg}
+                      >
+                        {isSavingOrg ? 'Saving...' : 'Save Changes'}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -675,7 +737,9 @@ export function Portal() {
                           {plan.price ? `$${plan.price}/month` : 'Custom pricing'}
                         </div>
                       </div>
-                      <Button variant="primary">Upgrade Plan</Button>
+                      <Button variant="primary" onClick={() => navigate('/pricing')}>
+                        Upgrade Plan
+                      </Button>
                     </div>
                     <div className="text-sm text-slate-500">
                       {plan.vectors === Infinity ? 'Unlimited' : plan.vectors.toLocaleString()} vectors •{' '}
@@ -701,13 +765,15 @@ export function Portal() {
             value={newIndexName}
             onChange={(e) => setNewIndexName(e.target.value)}
           />
-          <Input
-            label="Embedding Dimensions"
-            type="number"
-            placeholder="384"
-            value={newIndexDim}
-            onChange={(e) => setNewIndexDim(e.target.value)}
-          />
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-300">Embedding Dimensions</label>
+            <div className="bg-slate-800/30 rounded-lg p-3 text-slate-400 text-sm">
+              Fixed: <span className="text-cyan-400 font-mono">384</span> (sentence-transformers/all-MiniLM-L6-v2)
+            </div>
+            <p className="text-xs text-slate-500">
+              All vectors must use the same 384-dimensional embedding model for compatibility.
+            </p>
+          </div>
           <Input
             label="Description (optional)"
             placeholder="Describe your index..."

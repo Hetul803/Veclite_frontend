@@ -453,6 +453,22 @@ export async function createIndex(
   };
 }
 
+export async function deleteIndex(userId: string, indexId: string): Promise<void> {
+  if (!supabase) {
+    throw new Error('Supabase not configured. Please check your environment variables.');
+  }
+
+  const { error } = await supabase
+    .from('indexes')
+    .delete()
+    .eq('id', indexId)
+    .eq('user_id', userId);
+
+  if (error) {
+    throw new Error(error.message || 'Failed to delete index');
+  }
+}
+
 export async function finalizeIndex(apiKey: string, indexId: string): Promise<void> {
   // Update index status to building
   if (supabase) {

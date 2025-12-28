@@ -1,15 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Link as LinkIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { PLAN_LIMITS, COST_COMPARISON } from '../lib/config';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { LoginModal } from '../components/LoginModal';
+import { useAuth } from '../lib/auth-context';
 
 export function Pricing() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   const comparisonFeatures = [
@@ -170,13 +173,62 @@ export function Pricing() {
                     variant={plan.name === 'Pro' || plan.name === 'Scale' ? 'primary' : 'secondary'}
                     className="w-full"
                     size="md"
-                    onClick={() => setIsLoginOpen(true)}
+                    onClick={async () => {
+                      if (!user) {
+                        setIsLoginOpen(true);
+                        return;
+                      }
+                      
+                      // Check if user is already on this plan
+                      if (user.plan === plan.name.toLowerCase()) {
+                        alert(`You are already on the ${plan.name} plan.`);
+                        return;
+                      }
+                      
+                      // If Enterprise, show contact message
+                      if (plan.name === 'Enterprise') {
+                        alert('Please contact sales for Enterprise pricing.');
+                        return;
+                      }
+                      
+                      // For paid plans, redirect to Stripe checkout
+                      // TODO: Integrate Stripe checkout session creation
+                      try {
+                        const response = await fetch(`${import.meta.env.VITE_MCN_API_URL || 'http://localhost:8000'}/api/stripe/create-checkout-session`, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            api_key: user.apiKey,
+                            plan: plan.name.toLowerCase(),
+                          }),
+                        });
+                        
+                        if (response.ok) {
+                          const { url } = await response.json();
+                          window.location.href = url;
+                        } else {
+                          throw new Error('Failed to create checkout session');
+                        }
+                      } catch (error) {
+                        console.error('Stripe checkout error:', error);
+                        alert('Payment integration is being set up. Please contact support to upgrade.');
+                      }
+                    }}
                   >
-                    {plan.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
+                    {plan.name === 'Enterprise' 
+                      ? 'Contact Sales' 
+                      : user?.plan === plan.name.toLowerCase() 
+                        ? 'Current Plan' 
+                        : user 
+                          ? 'Upgrade' 
+                          : 'Get Started'}
                   </Button>
                 </Card>
               </motion.div>
-            ))}
+            );
+            })}
           </div>
         </div>
 
@@ -250,7 +302,9 @@ export function Pricing() {
                 <Link to="/docs">
                   <Button variant="ghost">Read Documentation</Button>
                 </Link>
-                <Button onClick={() => setIsLoginOpen(true)}>Start Free Trial</Button>
+                {!user && (
+                  <Button onClick={() => setIsLoginOpen(true)}>Get Started</Button>
+                )}
               </div>
             </div>
           </Card>
