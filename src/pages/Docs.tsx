@@ -591,7 +591,7 @@ const context = searchResults.results.map(r => r.metadata.text).join("\\n");`}</
                     <ul className="text-slate-400 space-y-2 mb-2">
                       <li className="flex items-start gap-2">
                         <span className="text-cyan-400 mt-1">•</span>
-                        <span><strong>Base URL:</strong> Your Veclite backend URL (e.g., <code className="text-cyan-400">https://api.veclite.com</code> or your Railway URL). This is where your backend API is deployed.</span>
+                        <span><strong>Base URL:</strong> <code className="text-cyan-400">https://memryxbackend-production.up.railway.app</code> - This is your Veclite backend API endpoint.</span>
                       </li>
                       <li className="flex items-start gap-2">
                         <span className="text-cyan-400 mt-1">•</span>
