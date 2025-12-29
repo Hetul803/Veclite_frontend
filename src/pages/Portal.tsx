@@ -531,44 +531,77 @@ export function Portal() {
 
                 <Card glow>
                   <CardHeader>
-                    <CardTitle>Active API Key</CardTitle>
+                    <CardTitle>API Configuration</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {user?.apiKey ? (
                       <>
-                        <div className="bg-slate-800/30 rounded-lg p-4 mb-4">
-                          <div className="flex items-center justify-between gap-3">
-                            <code className="text-slate-100 font-mono text-sm flex-1 break-all">
-                              {apiKeyVisible ? user.apiKey : `${user.apiKey.substring(0, 20)}${'•'.repeat(20)}${user.apiKey.substring(user.apiKey.length - 8)}`}
-                            </code>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setApiKeyVisible(!apiKeyVisible)}
-                                title={apiKeyVisible ? "Hide key" : "Show key"}
-                              >
-                                {apiKeyVisible ? <EyeOff size={16} /> : <Eye size={16} />}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={async () => {
-                                  try {
-                                    await navigator.clipboard.writeText(user.apiKey);
-                                    // Show toast or feedback
-                                  } catch (err) {
-                                    console.error('Failed to copy:', err);
-                                  }
-                                }}
-                                title="Copy to clipboard"
-                              >
-                                <Copy size={16} />
-                              </Button>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">Backend API URL</label>
+                            <div className="bg-slate-800/30 rounded-lg p-4">
+                              <div className="flex items-center justify-between gap-3">
+                                <code className="text-slate-100 font-mono text-sm flex-1 break-all">
+                                  https://memryxbackend-production.up.railway.app
+                                </code>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={async () => {
+                                    try {
+                                      await navigator.clipboard.writeText('https://memryxbackend-production.up.railway.app');
+                                    } catch (err) {
+                                      console.error('Failed to copy:', err);
+                                    }
+                                  }}
+                                  title="Copy URL to clipboard"
+                                >
+                                  <Copy size={16} />
+                                </Button>
+                              </div>
+                              <p className="text-xs text-slate-500 mt-2">
+                                Use this URL in all API calls. This is read-only and shared by all users.
+                              </p>
                             </div>
                           </div>
-                          <div className="text-sm text-slate-500 mt-2">
-                            Created on {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                          
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">Your API Key</label>
+                            <div className="bg-slate-800/30 rounded-lg p-4">
+                              <div className="flex items-center justify-between gap-3">
+                                <code className="text-slate-100 font-mono text-sm flex-1 break-all">
+                                  {apiKeyVisible ? user.apiKey : `${user.apiKey.substring(0, 20)}${'•'.repeat(20)}${user.apiKey.substring(user.apiKey.length - 8)}`}
+                                </code>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setApiKeyVisible(!apiKeyVisible)}
+                                    title={apiKeyVisible ? "Hide key" : "Show key"}
+                                  >
+                                    {apiKeyVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={async () => {
+                                      try {
+                                        await navigator.clipboard.writeText(user.apiKey);
+                                        // Show toast or feedback
+                                      } catch (err) {
+                                        console.error('Failed to copy:', err);
+                                      }
+                                    }}
+                                    title="Copy to clipboard"
+                                  >
+                                    <Copy size={16} />
+                                  </Button>
+                                </div>
+                              </div>
+                              <div className="text-sm text-slate-500 mt-2">
+                                Created on {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                              </div>
+                            </div>
                           </div>
                         </div>
                         <Button
