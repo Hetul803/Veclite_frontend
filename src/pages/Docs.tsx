@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { PLAN_LIMITS } from '../lib/config';
 
-const API_BASE_URL = import.meta.env.VITE_MCN_API_URL || 'https://api.veclite.com';
+const API_BASE_URL = import.meta.env.VITE_MCN_API_URL || 'https://memryxbackend-production.up.railway.app';
 
 export function Docs() {
   return (
@@ -48,7 +48,7 @@ export function Docs() {
                       Sign up at <a href="/app" className="text-cyan-400 hover:underline">veclite.com/app</a> and go to Portal → API Keys. Copy your API key (starts with <code className="text-cyan-400">veclite_sk_</code>).
                     </p>
                     <p className="text-slate-400 mb-3 text-sm">
-                      <strong>Backend URL:</strong> Use your deployed Veclite backend URL (e.g., <code className="text-cyan-400">https://api.veclite.com</code> or your Railway URL). This is where your backend API is hosted, not the frontend website.
+                      <strong>Backend URL:</strong> <code className="text-cyan-400">https://memryxbackend-production.up.railway.app</code> - This is where your backend API is hosted. Use this URL in all API calls.
                     </p>
                   </div>
 

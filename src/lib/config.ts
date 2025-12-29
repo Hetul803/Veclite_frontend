@@ -199,7 +199,7 @@ export const COST_COMPARISON = {
 };
 
 // Real API endpoints matching server_v2.py
-const API_BASE = import.meta.env.VITE_MCN_API_URL || 'https://api.veclite.com';
+const API_BASE = import.meta.env.VITE_MCN_API_URL || 'https://memryxbackend-production.up.railway.app';
 
 export const API_ENDPOINTS = [
   {
