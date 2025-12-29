@@ -801,7 +801,7 @@ export function Portal() {
           <div className="space-y-2">
             <label className="block text-sm font-medium text-slate-300">Embedding Dimensions</label>
             <div className="bg-slate-800/30 rounded-lg p-3 text-slate-400 text-sm">
-              Fixed: <span className="text-cyan-400 font-mono">384</span> (sentence-transformers/all-MiniLM-L6-v2)
+              Fixed: <span className="text-cyan-400 font-mono">384</span> (e.g., sentence-transformers/all-MiniLM-L6-v2)
             </div>
             <p className="text-xs text-slate-500">
               All vectors must use the same 384-dimensional embedding model for compatibility.

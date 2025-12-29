@@ -55,7 +55,7 @@ export function Docs() {
                   <div>
                     <h3 className="text-slate-100 font-semibold mb-3">2. Add Vectors</h3>
                     <p className="text-slate-400 mb-3 text-sm">
-                      Upload your vectors. All vectors must be 384-dimensional (use <code className="text-cyan-400">sentence-transformers/all-MiniLM-L6-v2</code>).
+                      Upload your vectors. All vectors must be 384-dimensional (use sentence-transformers, for example <code className="text-cyan-400">sentence-transformers/all-MiniLM-L6-v2</code>).
                     </p>
                     <div className="bg-slate-950 rounded-lg p-4 border border-slate-800 overflow-x-auto mb-3">
                       <pre className="text-sm text-slate-300">
@@ -148,7 +148,7 @@ from sentence_transformers import SentenceTransformer
 # Setup
 API_KEY = "veclite_sk_YOUR_KEY_HERE"
 API_URL = "${API_BASE_URL}"
-model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')  # Example: any 384-dim model works
 
 # 1. Add knowledge base
 documents = ["Doc 1", "Doc 2", ...]
@@ -623,7 +623,7 @@ const context = searchResults.results.map(r => r.metadata.text).join("\\n");`}</
                   <div>
                     <h3 className="text-slate-100 font-semibold mb-2">What vector dimension do you support?</h3>
                     <p className="text-slate-400">
-                      Fixed 384 dimensions (sentence-transformers/all-MiniLM-L6-v2). Use this model for embeddings to ensure compatibility.
+                      Fixed 384 dimensions. Use sentence-transformers (for example <code className="text-cyan-400">sentence-transformers/all-MiniLM-L6-v2</code>) or any other 384-dimensional embedding model.
                     </p>
                   </div>
                 </div>
