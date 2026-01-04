@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Zap, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { LoginModal } from './LoginModal';
 import { useAuth } from '../lib/auth-context';
@@ -26,11 +26,15 @@ export function Header() {
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2 group">
               <motion.div
-                whileHover={{ rotate: 180, scale: 1.1 }}
+                whileHover={{ scale: 1.1 }}
                 transition={{ duration: 0.3 }}
-                className="w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center"
+                className="w-8 h-8 flex items-center justify-center"
               >
-                <Zap size={18} className="text-slate-950" />
+                <img 
+                  src="/logo.svg" 
+                  alt="Veclite Logo" 
+                  className="w-8 h-8"
+                />
               </motion.div>
               <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                 Veclite
